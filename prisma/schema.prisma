@@ -1,0 +1,390 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  document      String?        // CPF/CNPJ for NFe
+  password      String         // In real app, hash this!
+  role          String         @default("customer") // customer, editor, admin
+  isGuest       Boolean        @default(false)
+  loyaltyPoints Int            @default(0) // Pontos de fidelidade
+  locale        String?         @default("pt-BR") // Idioma preferido do usuário
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  cart          Cart?
+  orders        Order[]
+  addresses     Address[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+  productViews  ProductView[]
+  supportTickets SupportTicket[]
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Address_User_FK_v_FINAL_999")
+
+  // Dados do endereço
+  zipCode      String   // CEP
+  street       String   // Logradouro
+  number       String
+  complement   String?
+  neighborhood String   // Bairro
+  city         String
+  state        String   // UF
+  country      String   @default("Brasil")
+
+  // Metadados
+  isDefault    Boolean  @default(false)
+  label        String?  // Ex: "Casa", "Trabalho"
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders       Order[]
+
+  @@index([userId])
+}
+
+model Product {
+  id          String         @id @default(uuid())
+  name        String
+  description String         @db.Text
+  price       Int
+  currency    String         @default("BRL")
+  stock       Int
+  imageUrl    String
+  videoUrl    String?
+  category    String
+  active      Boolean        @default(true)
+
+  // Logística
+  weight      Int?           // Peso em gramas
+  length      Int?           // Comprimento em cm
+  width       Int?           // Largura em cm
+  height      Int?           // Altura em cm
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  productViews  ProductView[]
+  images        ProductImage[]
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImage_Product_FK_v_FINAL_999")
+  url       String
+  alt       String?
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?    @unique
+  sessionId String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Cart_User_FK_v_FINAL_999")
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@index([sessionId])
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade, map: "CartItem_Cart_FK_v_FINAL_999")
+  productId String
+  product   Product @relation(fields: [productId], references: [id], map: "CartItem_Product_FK_v_FINAL_999")
+  quantity  Int
+
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], map: "Order_User_FK_v_FINAL_999")
+  
+  // Endereço de entrega
+  addressId       String?
+  address         Address?    @relation(fields: [addressId], references: [id], map: "Order_Address_FK_v_FINAL_999")
+  
+  // Frete
+  shippingMethod  String?     // Ex: "PAC", "SEDEX"
+  shippingCost    Int?        // Custo em centavos
+  shippingDays    Int?        // Prazo estimado
+  trackingCode    String?     // Código de rastreio
+  
+  // Cupom de desconto
+  couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id], map: "Order_Coupon_FK_v_FINAL_999")
+  discountAmount  Int         @default(0) // Desconto aplicado em centavos
+  
+  // Programa de fidelidade
+  loyaltyPointsEarned Int     @default(0) // Pontos ganhos nesta compra
+  loyaltyPointsUsed   Int     @default(0) // Pontos usados nesta compra
+  
+  items           OrderItem[]
+  subtotal        Int         // Soma dos produtos
+  taxAmount       Int         @default(0) // Valor de impostos calculado
+  total           Int         // Subtotal + Frete + Impostos - Desconto
+  status          String      @default("pending")
+  
+  invoices        Invoice[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([couponId])
+  @@index([addressId])
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade, map: "OrderItem_Order_FK_v_FINAL_999")
+  productId String
+  product   Product @relation(fields: [productId], references: [id], map: "OrderItem_Product_FK_v_FINAL_999")
+  quantity  Int
+  price     Int
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model StoreConfig {
+  id         String   @id @default(uuid())
+  storeName  String
+  homeLayout Json?
+  
+  // Configurações de Logística
+  originZipCode String? // CEP de origem para cálculo de frete
+  
+  // Configurações de Atendimento
+  whatsappNumber String? // Número do WhatsApp da empresa (com DDI+DDD)
+  whatsappMessage String? // Mensagem padrão
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model BehavioralLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // "click", "hover", "stay", "scroll", "add_to_cart_abandon"
+  details   Json?    // Detalhes extras (ex: productId, tempo de permanência)
+  ip        String?
+  source    String?  // UTM source ou página de origem
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "Review_Product_FK_v_FINAL_999")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Review_User_FK_v_FINAL_999")
+  
+  rating    Int      // 1-5 estrelas
+  title     String?  // Título da avaliação
+  comment   String   @db.Text
+  videoUrl  String?  // URL do vídeo da avaliação
+  
+  // Verificação de compra
+  verified  Boolean  @default(false) // Compra verificada
+  
+  // Moderação
+  approved  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([productId])
+  @@index([userId])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Wishlist_User_FK_v_FINAL_999")
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "Wishlist_Product_FK_v_FINAL_999")
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId]) // Um produto por usuário na wishlist
+  @@index([userId])
+  @@index([productId])
+}
+
+model Coupon {
+  id               String    @id @default(uuid())
+  code             String    @unique // Código do cupom (ex: "PRIMEIRACOMPRA")
+  description      String?   // Descrição do cupom
+  
+  // Tipo de desconto
+  discountType     String    // "percentage" ou "fixed"
+  discountValue    Int       // Porcentagem (ex: 10 = 10%) ou valor fixo em centavos
+  
+  // Restrições
+  minPurchaseAmount Int?     // Valor mínimo de compra em centavos
+  maxDiscountAmount Int?     // Desconto máximo em centavos (para porcentagem)
+  maxUses          Int?      // Número máximo de usos (null = ilimitado)
+  usesCount        Int       @default(0) // Contador de usos
+  
+  // Validade
+  validFrom        DateTime  @default(now())
+  validUntil       DateTime?
+  
+  // Status
+  active           Boolean   @default(true)
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  orders           Order[]
+  
+  @@index([code])
+}
+
+model LoyaltyTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  points      Int      // Positivo = ganho, Negativo = gasto
+  type        String   // "earned", "spent", "expired", "bonus"
+  description String   // Descrição da transação
+  orderId     String?  // ID do pedido relacionado (se aplicável)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model ProductView {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductView_Product_FK_v100")
+  userId    String?  // Null se for visitante anônimo
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ProductView_User_FK_v100")
+  
+  // Dados da visualização
+  ipAddress String?  // Para rastrear visitantes únicos
+  userAgent String?  // Navegador/dispositivo
+  
+  createdAt DateTime @default(now())
+  
+  @@index([productId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Carrier {
+  id              String  @id @default(uuid())
+  name            String
+  code            String?  // Código da transportadora
+  isActive        Boolean @default(true)
+  calculateApiUrl String? 
+  apiKey          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// MODULE: FISCAL (NFe)
+// -------------------------------------------------------------
+
+model FiscalConfig {
+  id              String  @id @default(uuid())
+  certificatePath String? // Caminho para o arquivo .pfx
+  certificatePass String? // Senha do certificado
+  environment     String  @default("homologation") // "production" or "homologation"
+  cnpj            String?
+  companyName     String?
+  ie              String? // Inscrição Estadual
+  
+  updatedAt       DateTime @updatedAt
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], map: "Invoice_Order_FK_v100")
+  
+  number        String?  // Número da nota
+  series        String?  // Série
+  accessKey     String?  // Chave de acesso (44 dígitos)
+  xmlUrl        String?  // URL do XML armazenado
+  pdfUrl        String?  // URL do DANFE armazenado
+  status        String   @default("draft") // draft, emitting, authorized, rejected, canceled
+  
+  issuedAt      DateTime @default(now()) // Data de emissão
+  authorizedAt  DateTime?
+  
+  @@index([orderId])
+  @@index([accessKey])
+}
+
+// -------------------------------------------------------------
+// MODULE: SUPPORT & EMAILS
+// -------------------------------------------------------------
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], map: "Support_User_FK_v100")
+  subject     String
+  message     String   @db.Text
+  status      String   @default("open") // open, analyzing, resolved, closed
+  priority    String   @default("medium") // low, medium, high
+  
+  // Contact info (if guest)
+  guestEmail  String?
+  guestName   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model EmailTemplate {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "welcome", "forgot-password", "order-confirmed"
+  subject     String
+  body        String   @db.Text // HTML content
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

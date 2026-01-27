@@ -1,0 +1,105 @@
+import { prisma } from "@/lib/prisma";
+import { Metadata } from "next";
+import { ProductGallery } from "@/frontend/components/product/ProductGallery";
+import { ProductInfo } from "@/frontend/components/product/ProductInfo";
+import { FadeIn } from "@/frontend/components/ui/Motion";
+import { notFound } from "next/navigation";
+
+interface PageProps {
+    params: Promise<{
+        id: string;
+    }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { id } = await params;
+    const product = await prisma.product.findUnique({ where: { id } });
+
+    if (!product) return { title: 'Produto não encontrado' };
+
+    return {
+        title: product.name,
+        description: product.description.slice(0, 160),
+        openGraph: {
+            title: product.name,
+            description: product.description.slice(0, 160),
+            images: [{ url: product.imageUrl }],
+        },
+    };
+}
+
+import { ProductReviews } from "@/frontend/components/product/ProductReviews";
+import { BehaviorTracker } from "@/frontend/components/ai/BehaviorTracker";
+import { AiProductRecommendations } from "@/frontend/components/product/AiProductRecommendations";
+import { StickyAddToCart } from "@/frontend/components/product/StickyAddToCart";
+import { addToCart } from "@/backend/actions/cart-actions";
+import { toast } from "sonner";
+import { ProductStructuredData } from "@/frontend/components/seo/StructuredData";
+
+export default async function ProductPage({ params }: PageProps) {
+    const { id } = await params;
+
+    // Fetch product with images
+    const product = await prisma.product.findUnique({
+        where: { id },
+        include: { images: true }
+    });
+
+    if (!product) {
+        notFound();
+    }
+
+    // Prepare images array: [mainUrl, ...extraImages]
+    const images = [
+        product.imageUrl,
+        ...(product as any).images?.map((img: any) => img.url) || []
+    ].filter(url => !!url && url.trim() !== '');
+
+    // Deduplicate
+    const uniqueImages = Array.from(new Set(images));
+
+    // Serialize for component
+    const serializedProduct = {
+        ...product,
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString(),
+        videoUrl: product.videoUrl ?? undefined
+    };
+
+
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-black font-sans flex flex-col">
+            <BehaviorTracker productId={product.id} />
+            <ProductStructuredData product={product} />
+            <StickyAddToCart product={product} />
+            <main className="flex-1 container mx-auto px-4 pt-8 pb-20 text-black dark:text-white">
+                <FadeIn>
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                            {/* Esquerda: Galeria */}
+                            <div>
+                                <ProductGallery
+                                    images={uniqueImages}
+                                    video={product.videoUrl}
+                                    productName={product.name}
+                                />
+                            </div>
+
+                            {/* Direita: Informações */}
+                            <div className="sticky top-24 h-fit">
+                                <ProductInfo product={serializedProduct as any} />
+                            </div>
+                        </div>
+
+                        {/* Avaliações */}
+                        <ProductReviews productId={product.id} />
+
+                        {/* IA Recommendations */}
+                        <AiProductRecommendations />
+                    </div>
+                </FadeIn>
+            </main>
+        </div>
+    );
+}

@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+:root {
+  /* Option 2: Titanium Minimalist (Apple/Premium Style) */
+  /* Clean, sophisticated, focus on product. */
+  
+  --background: hsl(0 0% 100%);     /* Pure White */
+  --foreground: hsl(240 10% 3.9%);  /* Zinc 950 (#09090b) */
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 3.9%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 3.9%);
+
+  --primary: hsl(0 0% 0%);          /* Pure Black for actions */
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(240 4.8% 95.9%); /* Zinc 100 */
+  --secondary-foreground: hsl(240 5.9% 10%);
+
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%); /* Zinc 500 */
+
+  --accent: hsl(210 100% 44.5%);    /* Tech Blue (#0071E3) */
+  --accent-foreground: hsl(0 0% 100%);
+
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  --border: hsl(240 5.9% 90%);      /* Zinc 200 */
+  --input: hsl(240 5.9% 90%);
+  --ring: hsl(240 10% 3.9%);
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(0 0% 0%);       /* Pure Black */
+  --foreground: hsl(0 0% 100%);     /* Pure White */
+
+  --card: hsl(240 10% 3.9%);        /* Zinc 950 */
+  --card-foreground: hsl(0 0% 98%);
+
+  --popover: hsl(0 0% 0%);
+  --popover-foreground: hsl(0 0% 98%);
+
+  --primary: hsl(0 0% 100%);        /* White for actions */
+  --primary-foreground: hsl(0 0% 0%);
+
+  --secondary: hsl(240 3.7% 15.9%); /* Zinc 800 */
+  --secondary-foreground: hsl(0 0% 98%);
+
+  --muted: hsl(240 3.7% 15.9%);
+  --muted-foreground: hsl(240 5% 64.9%);
+
+  --accent: hsl(209 100% 58%);      /* Vivid Blue (#2997FF) */
+  --accent-foreground: hsl(0 0% 100%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --border: hsl(240 3.7% 15.9%);    /* High contrast dark border */
+  --input: hsl(240 3.7% 15.9%);
+  --ring: hsl(240 4.9% 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+
+  /* Glassmorphism utility resembling iOS glass — use Tailwind native utilities */
+  .glass {
+    @apply bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl;
+  }
+
+  .glass-stat {
+    @apply bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl;
+  }
+
+  .glass-dark {
+    @apply bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl;
+  }
+
+  /* Note: card-specific utilities were removed — use `.glass` for glassmorphism,
+     or Tailwind utilities like `bg-white/10 dark:bg-black/30 backdrop-blur-xl` */
+
+  /* iOS-style Frosted Glass - Use on vibrant/colored backgrounds */
+  .glass-ios {
+    @apply bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
+  }
+
+  /* Login Page Animations */
+  @keyframes tunnel-flow {
+    0% {
+      opacity: 0;
+      transform: perspective(500px) translateZ(0px) scale(0.2);
+    }
+
+    20% {
+      opacity: 0.5;
+    }
+
+    100% {
+      opacity: 0;
+      transform: perspective(500px) translateZ(300px) scale(2);
+    }
+  }
+
+  .animate-tunnel {
+    animation: tunnel-flow 3s infinite linear;
+  }
+
+  /* Responsive Utilities */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-spacing {
+    @apply py-8 md:py-16 lg:py-24;
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

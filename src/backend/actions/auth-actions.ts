@@ -1,0 +1,70 @@
+'use server'
+
+import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifyPassword } from "@/lib/crypto";
+
+const COOKIE_NAME = 'ecommerce_session';
+
+export async function login(formData: FormData) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    if (!email || !password) {
+        return { error: 'Preencha todos os campos.' };
+    }
+
+    try {
+        // Find user - only fetch needed fields for performance
+        const user = await prisma.user.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                email: true,
+                password: true,
+                role: true,
+            }
+        });
+
+        if (!user) {
+            return { error: 'Email ou senha inválidos.' };
+        }
+
+        // Verify password using bcrypt
+        const isValidPassword = await verifyPassword(password, user.password);
+
+        if (!isValidPassword) {
+            return { error: 'Email ou senha inválidos.' };
+        }
+
+        // Set Cookie
+        const cookieStore = await cookies();
+        cookieStore.set(COOKIE_NAME, user.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            path: '/',
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+        });
+
+        // Return success with redirect URL instead of redirecting directly
+        // This allows the client to handle the redirect smoothly
+        const redirectUrl = (user.role === 'admin' || user.role === 'editor') ? '/admin' : '/';
+
+        return {
+            success: true,
+            redirectUrl,
+            message: 'Login realizado com sucesso!'
+        };
+    } catch (error) {
+        console.error('Login error:', error);
+        return { error: 'Erro ao fazer login. Tente novamente.' };
+    }
+}
+
+export async function logout() {
+    (await cookies()).delete(COOKIE_NAME);
+    redirect('/');
+}

@@ -1,0 +1,41 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Main application
+  - job_name: 'ecommerce-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics'
+
+  # Analytics service
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['analytics-service:3001']
+    metrics_path: '/metrics'
+
+  # MySQL
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
