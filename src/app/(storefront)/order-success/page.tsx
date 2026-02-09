@@ -124,10 +124,12 @@ export default async function OrderSuccessPage({ searchParams }: PageProps) {
                             <h2 className="font-semibold">Itens do Pedido</h2>
                         </div>
                         <div className="space-y-3">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {order.items.map((item: any) => (
                                 <div key={item.id} className="flex gap-4 pb-3 border-b border-border last:border-0">
                                     <div className="w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
                                         {item.product.imageUrl && (
+                                            // eslint-disable-next-line @next/next/no-img-element
                                             <img
                                                 src={item.product.imageUrl}
                                                 alt={item.product.name}

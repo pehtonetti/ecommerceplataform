@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "services/**",
+    "prisma/seed-*.js",
+    "prisma/seed-*.ts",
   ]),
 ]);
 

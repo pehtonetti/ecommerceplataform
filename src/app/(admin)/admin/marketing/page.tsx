@@ -18,7 +18,7 @@ export default function MarketingPage() {
         try {
             await sendEmailCampaign(emailSubject || "Teste", "<b>Conteúdo de Teste</b>");
             toast.success("Email de teste enviado!");
-        } catch (e) {
+        } catch {
             toast.error("Erro ao enviar email");
         } finally {
             setLoading(false);

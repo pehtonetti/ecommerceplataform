@@ -1,8 +1,5 @@
-import { getUserOrders } from "@/backend/actions/order-actions";
-import { Header } from "@/frontend/components/Header";
-import { Footer } from "@/frontend/components/Footer";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Package, Search, Filter, Eye } from "lucide-react";
+import { Package, Eye } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 

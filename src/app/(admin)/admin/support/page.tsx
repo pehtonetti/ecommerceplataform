@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { MessageSquare, Mail, AlertCircle, CheckCircle, Clock, Save, Phone, Plus, Trash2 } from "lucide-react";
+import { MessageSquare, Mail, AlertCircle, CheckCircle, Save, Phone, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 // MOCK DATA
@@ -21,7 +21,7 @@ const INITIAL_TEMPLATES = [
 ];
 
 export default function SupportPage() {
-    const [tickets, setTickets] = useState(INITIAL_TICKETS);
+    const [tickets] = useState(INITIAL_TICKETS);
     const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
     const [whatsappNumber, setWhatsappNumber] = useState("5511999999999");
     const [activeTab, setActiveTab] = useState<'tickets' | 'whatsapp' | 'emails'>('tickets');
@@ -124,7 +124,7 @@ export default function SupportPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <span className={`text-xs px-2 py-1 rounded-full ${ticket.status === 'open' ? 'bg-red-100 text-red-700' :
-                                                ticket.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                            ticket.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {ticket.status === 'open' ? 'Aberto' : ticket.status === 'resolved' ? 'Resolvido' : 'Pendente'}
                                         </span>
@@ -166,7 +166,7 @@ export default function SupportPage() {
                                 <h3 className="font-semibold text-green-800 dark:text-green-400 mb-2">Tutorial Passo a Passo</h3>
                                 <ul className="list-disc pl-4 space-y-2 text-sm text-green-700 dark:text-green-300">
                                     <li>Cadastre o número oficial da sua empresa acima.</li>
-                                    <li>Nos botões "Fale Conosco" do site, o link será gerado automaticamente.</li>
+                                    <li>Nos botões &quot;Fale Conosco&quot; do site, o link será gerado automaticamente.</li>
                                     <li>O link padrão será: <code className="bg-white/50 px-1 rounded">https://wa.me/{whatsappNumber}</code></li>
                                     <li>Configure mensagens automáticas no seu WhatsApp Business para saudações iniciais.</li>
                                 </ul>
@@ -180,6 +180,7 @@ export default function SupportPage() {
 
                     <div className="glass p-6 rounded-xl border border-border flex items-center justify-center">
                         <div className="text-center space-y-4">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src="/images/qr-code-placeholder.png" alt="QR Code" className="w-48 h-48 opacity-20 mx-auto" />
                             <p className="text-muted-foreground">O QR Code para início rápido aparecerá aqui após salvar.</p>
                         </div>

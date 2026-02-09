@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
 import * as XLSX from "xlsx";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ExportInventoryButton({ products }: { products: any[] }) {
 
     const handleExport = () => {

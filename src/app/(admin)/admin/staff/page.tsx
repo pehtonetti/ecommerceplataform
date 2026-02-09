@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/frontend/components/ui/Button";
-import { Shield, ShieldAlert } from "lucide-react";
+import { Shield } from "lucide-react";
 import Link from "next/link";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 
@@ -38,8 +38,8 @@ export default async function StaffPage() {
                                 {member.name.charAt(0).toUpperCase()}
                             </div>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium border ${member.role === 'admin'
-                                    ? 'bg-red-50 text-red-700 border-red-200'
-                                    : 'bg-blue-50 text-blue-700 border-blue-200'
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
                                 }`}>
                                 {member.role === 'admin' ? 'Administrador' : 'Editor'}
                             </span>

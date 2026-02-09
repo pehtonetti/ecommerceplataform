@@ -66,7 +66,7 @@ export default async function AdminDashboard() {
 
             {/* Row 1: Key Metrics */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat, i) => (
+                {stats.map((stat) => (
                     <div
                         key={stat.name}
                         className={
@@ -115,7 +115,7 @@ export default async function AdminDashboard() {
                 <div className="md:col-span-3 p-6 rounded-xl min-h-[400px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
                     <h3 className="font-semibold text-lg mb-4">Atividade Recente</h3>
                     <div className="space-y-6">
-                        {recentOrders.length > 0 ? recentOrders.map((order, i) => (
+                        {recentOrders.length > 0 ? recentOrders.map((order) => (
                             <div key={order.id} className="flex gap-4 items-start">
                                 <div className="w-2 h-2 mt-2 rounded-full bg-blue-500" />
                                 <div>

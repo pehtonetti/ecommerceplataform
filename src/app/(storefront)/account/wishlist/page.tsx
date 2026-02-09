@@ -41,6 +41,7 @@ export default async function WishlistPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {items.map((item: any) => (
                                 <ProductCard
                                     key={item.id}

@@ -1,4 +1,3 @@
-import { db } from "@/backend/infrastructure/db";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { Button } from "@/frontend/components/ui/Button";
 
@@ -20,7 +19,7 @@ export default async function SettingsPage() {
                 <p className="text-muted-foreground mt-2">Gerencie as informações principais e a aparência da sua loja.</p>
             </FadeIn>
 
-                <FadeIn delay={0.1} className="grid gap-6 glass p-6 rounded-xl border border-border shadow-sm">
+            <FadeIn delay={0.1} className="grid gap-6 glass p-6 rounded-xl border border-border shadow-sm">
                 <div>
                     <h2 className="text-xl font-semibold mb-4">Geral</h2>
                     <div className="grid gap-4">
@@ -43,7 +42,7 @@ export default async function SettingsPage() {
                 </div>
             </FadeIn>
 
-                <FadeIn delay={0.2} className="grid gap-6 glass p-6 rounded-xl border border-border shadow-sm">
+            <FadeIn delay={0.2} className="grid gap-6 glass p-6 rounded-xl border border-border shadow-sm">
                 <div>
                     <h2 className="text-xl font-semibold mb-4">Aparência</h2>
                     <div className="grid gap-4">

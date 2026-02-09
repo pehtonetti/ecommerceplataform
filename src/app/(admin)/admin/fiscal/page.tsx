@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { FileText, Save, Loader2, Upload, Search, Download, Trash2, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { FileText, Save, Loader2, Upload, Download, Trash2, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function FiscalPage() {
@@ -49,6 +49,7 @@ export default function FiscalPage() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.pfx,.p12';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         input.onchange = (e: any) => {
             const file = e.target.files[0];
             if (file) toast.success(`Certificado selecionado: ${file.name}`);
@@ -132,7 +133,7 @@ export default function FiscalPage() {
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold">Emissões Recentes</h2>
                         <div className="flex gap-2">
-                            <Input placeholder="Buscar por número ou cliente..." className="w-64" startIcon={<Search className="w-4 h-4" />} />
+                            <Input placeholder="Buscar por número ou cliente..." className="w-64" />
                             <Button variant="outline">Filtros</Button>
                         </div>
                     </div>
@@ -172,11 +173,11 @@ export default function FiscalPage() {
                                                     <Button size="sm" variant="outline" onClick={() => handleEmit(invoice.id)}>Reenviar</Button>
                                                 ) : (
                                                     <>
-                                                        <Button size="icon" variant="ghost" title="Baixar XML/PDF">
+                                                        <Button size="sm" variant="ghost" title="Baixar XML/PDF">
                                                             <Download className="w-4 h-4" />
                                                         </Button>
                                                         {invoice.status !== 'canceled' && (
-                                                            <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleCancel(invoice.id)} title="Cancelar">
+                                                            <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleCancel(invoice.id)} title="Cancelar">
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
                                                         )}

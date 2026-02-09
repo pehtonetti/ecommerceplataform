@@ -8,6 +8,7 @@ import { CookieConsent } from "@/frontend/components/CookieConsent";
 import { AiPersuader } from "@/frontend/components/ai/AiPersuader";
 import { AnnouncementBar } from "@/frontend/components/AnnouncementBar";
 import { CompareProvider } from "@/frontend/contexts/CompareContext";
+import { CartProvider } from "@/frontend/contexts/CartContext";
 import { CompareDrawer } from "@/frontend/components/ui/CompareDrawer";
 import { MobileNav } from "@/frontend/components/ui/MobileNav";
 
@@ -56,11 +57,16 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch initial cart state server-side to avoid hydration mismatch
+  // Dynamic import if needed or regular import if actions are compatible
+  const { getCart } = await import('@/backend/actions/cart-actions');
+  const cartData = await getCart();
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body
@@ -70,18 +76,20 @@ export default function RootLayout({
         <div suppressHydrationWarning>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
-            <CompareProvider>
-              {children}
-              <Toaster position="top-right" richColors />
-              <CookieConsent />
-              <AiPersuader />
-              <CompareDrawer />
-              <MobileNav />
-            </CompareProvider>
+            <CartProvider initialCart={cartData?.cart}>
+              <CompareProvider>
+                {children}
+                <Toaster position="top-right" richColors />
+                <CookieConsent />
+                <AiPersuader />
+                <CompareDrawer />
+                <MobileNav />
+              </CompareProvider>
+            </CartProvider>
           </ThemeProvider>
           <WhatsAppButton />
         </div>

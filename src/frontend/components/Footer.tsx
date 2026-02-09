@@ -53,8 +53,8 @@ export function Footer() {
 
                         {/* Navigation */}
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider">Navegação</h4>
-                            <ul className="space-y-3 text-sm text-muted-foreground">
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-foreground">Navegação</h4>
+                            <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
                                 <FooterLink href="/search">Início</FooterLink>
                                 <FooterLink href="/search?sort=bestselling">Mais Vendidos</FooterLink>
                                 <FooterLink href="/search?sort=newest">Lançamentos</FooterLink>
@@ -65,8 +65,8 @@ export function Footer() {
 
                         {/* Support */}
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider">Ajuda</h4>
-                            <ul className="space-y-3 text-sm text-muted-foreground">
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-foreground">Ajuda</h4>
+                            <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
                                 <FooterLink href="/account">Minha Conta</FooterLink>
                                 <FooterLink href="/orders">Meus Pedidos</FooterLink>
                                 <FooterLink href="/contact">Fale Conosco</FooterLink>
@@ -77,8 +77,8 @@ export function Footer() {
 
                         {/* Contact & Payments */}
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider">Atendimento</h4>
-                            <ul className="space-y-3 text-sm text-muted-foreground mb-8">
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-wider text-foreground">Atendimento</h4>
+                            <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400 font-medium mb-8">
                                 <li className="flex items-center gap-3">
                                     <Phone className="w-4 h-4" />
                                     (11) 99999-9999
@@ -93,10 +93,10 @@ export function Footer() {
                                 </li>
                             </ul>
 
-                            <h4 className="font-bold mb-4 text-xs uppercase tracking-wider">Pagamento</h4>
-                            <div className="flex gap-2 text-muted-foreground">
+                            <h4 className="font-bold mb-4 text-xs uppercase tracking-wider text-foreground">Pagamento</h4>
+                            <div className="flex gap-2 text-zinc-600 dark:text-zinc-400">
                                 <CreditCard className="w-8 h-8" />
-                                <div className="w-8 h-8 border border-border rounded flex items-center justify-center font-bold text-xs">PIX</div>
+                                <div className="w-8 h-8 border border-zinc-300 dark:border-zinc-700 rounded flex items-center justify-center font-bold text-xs">PIX</div>
                             </div>
                         </div>
                     </div>

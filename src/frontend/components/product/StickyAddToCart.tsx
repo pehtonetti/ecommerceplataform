@@ -4,25 +4,18 @@ import { useEffect, useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "../ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
-import { addToCart } from "@/backend/actions/cart-actions";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 export function StickyAddToCart({ product }: { product: any }) {
     const [isVisible, setIsVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
+    const { addToCart } = useCart();
 
     const handleAdd = async () => {
         setIsLoading(true);
-        const res = await addToCart(product.id, 1);
+        await addToCart(product.id, 1);
         setIsLoading(false);
-        if (res.success) {
-            toast.success("Adicionado ao carrinho!");
-            window.dispatchEvent(new Event('cart-updated'));
-        } else {
-            toast.error(res.error || "Erro ao adicionar");
-        }
     };
 
     useEffect(() => {

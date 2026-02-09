@@ -38,6 +38,21 @@ export async function POST(req: Request) {
                 });
 
                 console.log(`✅ Pagamento confirmado para pedido ${orderId}`);
+
+                // Disparar emissão de NFe
+                try {
+                    console.log(`📡 Iniciando emissão de NFe para pedido ${orderId}...`);
+                    const { emitNfe } = await import('@/backend/actions/fiscal-actions');
+                    const nfeResult = await emitNfe(orderId);
+
+                    if (nfeResult.success) {
+                        console.log(`✅ NFe emitida/solicitada com sucesso: ${nfeResult.nfeKey}`);
+                    } else {
+                        console.error(`⚠️ Erro ao emitir NFe: ${nfeResult.error}`);
+                    }
+                } catch (nfeError) {
+                    console.error(`❌ Erro crítico ao processar NFe:`, nfeError);
+                }
             }
             break;
         }

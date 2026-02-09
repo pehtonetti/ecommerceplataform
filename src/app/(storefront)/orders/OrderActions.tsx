@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/frontend/components/ui/Textarea";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function OrderActions({ order }: { order: any }) {
     const isDelivered = order.status === 'delivered';
     const [rating, setRating] = useState(0);
@@ -79,7 +80,7 @@ export function OrderActions({ order }: { order: any }) {
             {isDelivered && (
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="default" size="sm" className="flex-1 bg-yellow-500 hover:bg-yellow-600">
+                        <Button variant="primary" size="sm" className="flex-1 bg-yellow-500 hover:bg-yellow-600">
                             <Star className="w-4 h-4 mr-2" />
                             Avaliar
                         </Button>

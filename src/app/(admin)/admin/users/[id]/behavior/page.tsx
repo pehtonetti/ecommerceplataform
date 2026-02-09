@@ -5,6 +5,7 @@ import { FadeIn } from "@/frontend/components/ui/Motion";
 import { MousePointer2, Clock, MapPin, Eye, ShoppingCart, User } from "lucide-react";
 
 export default function UserBehaviorPage({ params }: { params: { id: string } }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 

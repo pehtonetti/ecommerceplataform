@@ -20,6 +20,7 @@ export default function LayoutEditor() {
     const [sections, setSections] = useState(INITIAL_SECTIONS);
     const [isSaving, setIsSaving] = useState(false);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleOnDragEnd = (result: any) => {
         if (!result.destination) return;
 
@@ -43,7 +44,7 @@ export default function LayoutEditor() {
         try {
             await saveLayoutConfig(sections);
             toast.success("Layout salvo com sucesso!");
-        } catch (error) {
+        } catch {
             toast.error("Erro ao salvar layout.");
         } finally {
             setIsSaving(false);

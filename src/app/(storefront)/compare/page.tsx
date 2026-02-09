@@ -54,6 +54,7 @@ export default function ComparePage() {
                                             <X className="w-4 h-4" />
                                         </button>
                                         <div className="flex flex-col items-center gap-4">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={product.imageUrl} alt={product.name} className="h-32 object-contain" />
                                             <h3 className="font-bold text-center text-sm line-clamp-2">{product.name}</h3>
                                             <p className="text-xl font-black text-primary">

@@ -32,8 +32,6 @@ import { ProductReviews } from "@/frontend/components/product/ProductReviews";
 import { BehaviorTracker } from "@/frontend/components/ai/BehaviorTracker";
 import { AiProductRecommendations } from "@/frontend/components/product/AiProductRecommendations";
 import { StickyAddToCart } from "@/frontend/components/product/StickyAddToCart";
-import { addToCart } from "@/backend/actions/cart-actions";
-import { toast } from "sonner";
 import { ProductStructuredData } from "@/frontend/components/seo/StructuredData";
 
 export default async function ProductPage({ params }: PageProps) {
@@ -52,6 +50,7 @@ export default async function ProductPage({ params }: PageProps) {
     // Prepare images array: [mainUrl, ...extraImages]
     const images = [
         product.imageUrl,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(product as any).images?.map((img: any) => img.url) || []
     ].filter(url => !!url && url.trim() !== '');
 
@@ -73,7 +72,7 @@ export default async function ProductPage({ params }: PageProps) {
             <BehaviorTracker productId={product.id} />
             <ProductStructuredData product={product} />
             <StickyAddToCart product={product} />
-            <main className="flex-1 container mx-auto px-4 pt-8 pb-20 text-black dark:text-white">
+            <main className="flex-1 container mx-auto px-4 pt-36 pb-20 text-black dark:text-white">
                 <FadeIn>
                     <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -87,7 +86,8 @@ export default async function ProductPage({ params }: PageProps) {
                             </div>
 
                             {/* Direita: Informações */}
-                            <div className="sticky top-24 h-fit">
+                            <div className="sticky top-32 h-fit">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 <ProductInfo product={serializedProduct as any} />
                             </div>
                         </div>

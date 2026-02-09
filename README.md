@@ -196,10 +196,10 @@ Contribuições são bem-vindas! Antes de abrir PR, veja:
 
 ---
 
-## 🧑‍💻 Autor
+## 🧑💻 Autor
 
 **Pedro Tonetti**
-Especialista em TI e desenvolvedor front-end.
+Especialista em TI e desenvolvedor FULLSTACK.
 
 📧 [pedrotonetti@gmail.com](mailto\:pedrotonetti@gmail.com)\
 📱 +55 14 996861719\
@@ -208,12 +208,6 @@ Especialista em TI e desenvolvedor front-end.
 ---
 
 ## ⭐ Se este projeto te ajudou
-
-<<<<<<< HEAD
 Considere deixar uma estrela ⭐ no repositório!
 
 ---
-
-=======
-Considere deixar uma estrela ⭐ no repositório! <3 Please?
->>>>>>> 7f8e678bcd5d7cdfec7c6828bb9940960d588ff5

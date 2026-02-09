@@ -2,7 +2,7 @@
 
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { Button } from "@/frontend/components/ui/Button";
-import { Download, TrendingUp, TrendingDown, DollarSign, Users, ShoppingBag } from "lucide-react";
+import { Download, TrendingDown, DollarSign, Users, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 

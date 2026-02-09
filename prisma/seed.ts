@@ -7,110 +7,9 @@ const hashPassword = async (password: string) => {
 
 const prisma = new PrismaClient();
 
-// Image Database mapped by keywords for relevance
-const IMAGE_DB: Record<string, string[]> = {
-  // Hardware
-  'Placa de Vídeo': [
-    'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&q=80',
-    'https://images.unsplash.com/photo-1555616635-640960031899?w=800&q=80',
-    'https://images.unsplash.com/photo-1624705022835-15a42bc39ba6?w=800&q=80'
-  ],
-  'Processador': [
-    'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=800&q=80',
-    'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=800&q=80',
-    'https://images.unsplash.com/photo-1580894742597-87bc8789db3d?w=800&q=80'
-  ],
-  'Placa Mãe': [
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80',
-    'https://images.unsplash.com/photo-1563206767-5b1d97289374?w=800&q=80',
-    'https://images.unsplash.com/photo-1544652478-6653e09f1826?w=800&q=80'
-  ],
 
-  // Periféricos
-  'Teclado': [
-    'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80',
-    'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=800&q=80',
-    'https://images.unsplash.com/photo-1595225476474-87563907a212?w=800&q=80'
-  ],
-  'Mouse': [
-    'https://images.unsplash.com/photo-1527814050087-3793815479db?w=800&q=80',
-    'https://images.unsplash.com/photo-1615663245857-acda6a9d3c3d?w=800&q=80',
-    'https://images.unsplash.com/photo-1629367494133-48ef3b4353d7?w=800&q=80'
-  ],
-  'Headset': [
-    'https://images.unsplash.com/photo-1599669454699-248893623440?w=800&q=80',
-    'https://images.unsplash.com/photo-1612444530582-fc66183b16f7?w=800&q=80',
-    'https://images.unsplash.com/photo-1487215078519-e21cc028d29c?w=800&q=80'
-  ],
 
-  // Monitores
-  'Monitor': [
-    'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&q=80',
-    'https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=800&q=80',
-    'https://images.unsplash.com/photo-1551645120-d70bfe84c826?w=800&q=80'
-  ],
 
-  // Smartphones
-  'Smartphone': [
-    'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=800&q=80',
-    'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800&q=80',
-    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80'
-  ],
-  'iPhone': [
-    'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=800&q=80',
-    'https://images.unsplash.com/photo-1530319067586-3bd098181f91?w=800&q=80',
-    'https://images.unsplash.com/photo-1556656793-0275bada8d74?w=800&q=80'
-  ],
-
-  // Notebooks
-  'Notebook': [
-    'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&q=80',
-    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80',
-    'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=800&q=80'
-  ],
-
-  // Consoles
-  'Console': [
-    'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80',
-    'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=800&q=80',
-    'https://images.unsplash.com/photo-1592840496063-4b4ba374a3ed?w=800&q=80'
-  ],
-  'PlayStation': [
-    'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80',
-    'https://images.unsplash.com/photo-1621259182902-fdbed7013fac?w=800&q=80',
-    'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800&q=80'
-  ],
-
-  // Áudio
-  'Áudio': [
-    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
-    'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80',
-    'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80'
-  ],
-
-  // Cadeira
-  'Cadeira': [
-    'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=800&q=80',
-    'https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=800&q=80',
-    'https://images.unsplash.com/photo-1617364852223-75f57e78dc96?w=800&q=80'
-  ],
-
-  // Default
-  'default': [
-    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80',
-    'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=800&q=80',
-    'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&q=80'
-  ]
-};
-
-function getImagesForKeyword(name: string): string[] {
-  for (const [key, images] of Object.entries(IMAGE_DB)) {
-    if (name.toLowerCase().includes(key.toLowerCase())) {
-      return images;
-    }
-  }
-  return IMAGE_DB['default'];
-}
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -144,76 +43,130 @@ async function main() {
     ]
   });
 
-  // 3. Create Categories and Products
-  console.log('Creating products with images...');
+  // Helper to generate distinct categories and products
+  // Requisição: 3 produtos por categoria, 60 categorias = 180 produtos. 
+  // Cada produto com 2 fotos e video simples. Variants de cor e capacidade.
 
-  // Define categories and keywords for procedural generation
-  const categoriesDefinition = [
-    { name: 'Hardware', keywords: ['Placa de Vídeo', 'Processador', 'Placa Mãe'] },
-    { name: 'Periféricos', keywords: ['Teclado', 'Mouse', 'Headset'] },
-    { name: 'Monitores', keywords: ['Monitor Gamer'] },
-    { name: 'Computadores', keywords: ['PC Gamer', 'Notebook Gamer'] },
-    { name: 'Smartphones', keywords: ['iPhone', 'Smartphone Samsung'] },
-    { name: 'Consoles', keywords: ['PlayStation 5', 'Console Xbox'] },
-    { name: 'Áudio', keywords: ['Caixa de Som', 'Fone Bluetooth'] },
-    { name: 'Móveis', keywords: ['Cadeira Gamer'] }
+  // Lista massiva de categorias para cobrir 60
+  const categoriesList = [
+    'Smartphones', 'Notebooks', 'Tablets', 'Monitores', 'Impressoras', 'Periféricos', 'Consoles', 'Jogos',
+    'Placas de Vídeo', 'Processadores', 'Placas Mãe', 'Memória RAM', 'Armazenamento', 'Fontes', 'Gabinetes', 'Coolers',
+    'Cadeiras Gamer', 'Mesas Gamer', 'Smartwatches', 'Smartbands', 'Fones de Ouvido', 'Caixas de Som', 'Soundbars', 'Microfones',
+    'Câmeras', 'Lentes', 'Drones', 'Acessórios de Câmera', 'TVs', 'Projetores', 'Streaming', 'Cabos',
+    'Adaptadores', 'Carregadores', 'Power Banks', 'Hubs USB', 'Rede Mesh', 'Roteadores', 'Switches', 'Repetidores',
+    'Casa Inteligente', 'Lâmpadas Smart', 'Tomadas Smart', 'Câmeras de Segurança', 'Fechaduras Digitais', 'Vídeo Porteiro', 'Assistentes Virtuais',
+    'Eletrodomésticos', 'Robôs Aspiradores', 'Ar Condicionado', 'Ventiladores', 'Umidificadores', 'Purificadores', 'Cafeteiras',
+    'Air Fryers', 'Liquidificadores', 'Batedeiras', 'Torradeiras', 'Chaleiras', 'Ferramentas'
   ];
 
-  const brands = ['Pro', 'Ultra', 'Elite', 'V2', 'Max', 'Gamer'];
+  // Base de imagens genéricas mas funcionais (Unsplash) para garantir visualização
+  const BASE_IMAGES = [
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80',
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80',
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+    'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800&q=80',
+    'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80',
+    'https://images.unsplash.com/photo-1588872657578-139a62703602?w=800&q=80',
+    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80',
+    'https://images.unsplash.com/photo-1494726161322-5360d4d0eeae?w=800&q=80',
+  ];
 
-  // Create Categories first
-  for (const catDef of categoriesDefinition) {
+  const VIDEOS = [
+    'https://www.w3schools.com/html/mov_bbb.mp4',
+    'https://media.w3.org/2010/05/sintel/trailer_hd.mp4'
+  ];
+
+  const COLORS = ['Preto', 'Branco', 'Prata', 'Azul', 'Vermelho', 'Dourado'];
+  const CAPACITIES = ['64GB', '128GB', '256GB', '512GB', '1TB'];
+
+  console.log(`Creating ${categoriesList.length} categories...`);
+
+  for (const catName of categoriesList) {
     await prisma.category.create({
       data: {
-        name: catDef.name,
-        slug: catDef.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-        description: `Melhores produtos de ${catDef.name}`
+        name: catName,
+        slug: catName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+        description: `Os melhores produtos de ${catName} selecionados para você.`
       }
     });
 
-    // Generate ~15 products per category
-    for (const keyword of catDef.keywords) {
-      for (let i = 0; i < 5; i++) {
-        const brand = brands[Math.floor(Math.random() * brands.length)];
-        const productName = `${keyword} ${brand} Edition ${i + 1}`;
-        const images = getImagesForKeyword(keyword);
-        const price = Math.floor(Math.random() * 200000) + 10000;
+    // Criar 3 produtos por categoria
+    for (let i = 1; i <= 3; i++) {
+      // Selecionar imagens (simulando seed aleatório mas determinístico)
+      const imgIndex = (catName.length + i) % BASE_IMAGES.length;
+      const mainImage = BASE_IMAGES[imgIndex];
+      const secondaryImage = BASE_IMAGES[(imgIndex + 1) % BASE_IMAGES.length];
+      const video = VIDEOS[i % 2];
 
-        const product = await prisma.product.create({
-          data: {
-            name: productName,
-            description: `Experiência premium com o ${productName}. Alta durabilidade e performance.`,
-            price: price,
-            stock: Math.floor(Math.random() * 50) + 5,
-            imageUrl: images[0], // Main image
-            category: catDef.name,
-            weight: 500, length: 20, width: 20, height: 10,
-          }
-        });
+      // Definir variantes variadas
+      const hasColors = Math.random() > 0.3; // 70% chance de ter cores
+      const hasCapacity = ['Smartphone', 'Notebook', 'Tablet', 'Console'].some(k => catName.includes(k));
 
-        // Add 3 images (using the map, cycling if needed)
-        for (let j = 0; j < 3; j++) {
-          await prisma.productImage.create({
-            data: {
-              productId: product.id,
-              url: images[j % images.length],
-              alt: `${productName} View ${j + 1}`
-            }
-          });
+      const productColors = hasColors ? COLORS.slice(0, Math.floor(Math.random() * 3) + 2) : [];
+      const productCapacities = hasCapacity ? CAPACITIES.slice(0, Math.floor(Math.random() * 3) + 2) : [];
+
+      const price = Math.floor(Math.random() * 500000) + 5000; // Entre 50 e 5000 reais
+
+      const product = await prisma.product.create({
+        data: {
+          name: `${catName} Premium Model ${String.fromCharCode(64 + i)}`, // Ex: Smartphone Premium Model A
+          description: `Descubra a tecnologia de ponta com o ${catName} Premium. Ideal para quem busca performance e estilo. Inclui garantia extendida e suporte premium.\n\nCaracterísticas:\n- Alta durabilidade\n- Design moderno\n- Eficiência energética`,
+          price: price,
+          stock: Math.floor(Math.random() * 100) + 10,
+          imageUrl: mainImage,
+          videoUrl: video,
+          category: catName,
+          active: true,
+          colors: productColors.length > 0 ? productColors : undefined,
+          capacities: productCapacities.length > 0 ? productCapacities : undefined,
+          weight: 500, length: 20, width: 20, height: 10, // Default logistics
         }
-      }
+      });
+
+      // Adicionar imagens extras
+      await prisma.productImage.createMany({
+        data: [
+          { productId: product.id, url: mainImage, alt: 'Main View' },
+          { productId: product.id, url: secondaryImage, alt: 'Side View' }
+        ]
+      });
     }
   }
 
-  // 4. Store Config
-  await prisma.storeConfig.create({
+  // Produto Específico Pedido (LG OLED)
+  console.log('Creating Specifc Requested Product...');
+  await prisma.category.upsert({
+    where: { slug: 'tvs' },
+    update: {},
+    create: { name: 'TVs', slug: 'tvs', description: 'Televisores de última geração' }
+  });
+
+  const lgOled = await prisma.product.create({
     data: {
-      storeName: 'Loja Tech Premium',
-      originZipCode: '01001-000'
+      name: 'Smart TV LG OLED evo C3 55"',
+      description: 'A melhor TV OLED do mundo ficou ainda melhor. O processador α9 Gen6 AI 4K exclusividade da LG OLED evo eleva a experiência de visualização a outro nível.',
+      price: 549900, // R$ 5.499,00
+      stock: 8,
+      imageUrl: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=80', // Imagem de TV
+      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      category: 'TVs',
+      active: true,
+      colors: ['Preto', 'Prata'], // Exemplo de variantes
+      capacities: ['55 polegadas', '65 polegadas'], // Usando capacity como tamanho p/ exemplo
+      weight: 15000, length: 120, width: 10, height: 70
     }
   });
 
-  console.log('✅ Seed completed!');
+  await prisma.productImage.createMany({
+    data: [
+      { productId: lgOled.id, url: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=80', alt: 'Front View' },
+      { productId: lgOled.id, url: 'https://images.unsplash.com/photo-1552975084-6e027cd345c2?w=800&q=80', alt: 'Side View' }
+    ]
+  });
+
+  console.log('✅ Seed completed with 60 categories and diverse products!');
 }
 
 main()

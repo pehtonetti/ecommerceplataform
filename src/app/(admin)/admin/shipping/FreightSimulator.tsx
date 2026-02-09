@@ -7,6 +7,7 @@ import { Search, Package } from "lucide-react";
 
 export function FreightSimulator() {
     const [cep, setCep] = useState("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [result, setResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 

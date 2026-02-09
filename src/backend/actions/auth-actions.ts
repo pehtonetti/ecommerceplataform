@@ -38,15 +38,14 @@ export async function login(formData: FormData) {
             return { error: 'Email ou senha inválidos.' };
         }
 
-        // Set Cookie
+        // Set Cookie as a Session Cookie (expires when browser/tab closes)
+        // Removed maxAge and expires to ensure "logout on exit" behavior
         const cookieStore = await cookies();
         cookieStore.set(COOKIE_NAME, user.id, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 30, // 30 days
             path: '/',
-            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
         });
 
         // Return success with redirect URL instead of redirecting directly

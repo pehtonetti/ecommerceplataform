@@ -13,38 +13,76 @@ interface ProductGalleryProps {
 
 export function ProductGallery({ images, video, productName }: ProductGalleryProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
-    // Se tiver vídeo, ele pode ser o último item ou um item especial. 
-    // Vamos tratar images como a lista principal. Se video existir, adicionamos um "thumb" de video.
+    const [failedImages, setFailedImages] = useState<number[]>([]);
 
     const hasVideo = !!video;
-    const totalItems = images.length + (hasVideo ? 1 : 0);
+
+    // Auto-switch if selected image fails
+    const handleImageError = (index: number) => {
+        console.log(`Image at index ${index} failed to load.`);
+        setFailedImages(prev => {
+            if (prev.includes(index)) return prev;
+            return [...prev, index];
+        });
+    };
+
+    // Effect to switch away from broken image immediately
+    if (failedImages.includes(selectedIndex)) {
+        // Find next valid index
+        let nextIndex = selectedIndex + 1;
+
+        // If next is also broken, keep searching
+        while (nextIndex < images.length && failedImages.includes(nextIndex)) {
+            nextIndex++;
+        }
+
+        // Check bounds
+        if (nextIndex < images.length) {
+            setSelectedIndex(nextIndex);
+        } else if (hasVideo) {
+            // If all images fail, go to video
+            if (selectedIndex !== images.length) {
+                setSelectedIndex(images.length);
+            }
+        }
+        // If no video and all images failed, we stay (will show placeholder) 
+        // or we could reset to 0 to show placeholder on first slot
+    }
 
     const isVideoSelected = hasVideo && selectedIndex === images.length;
+    // Main image source - fallback handled by the effect, but we render placeholder if current is truly broken and no alternatives
+    const currentMainImage = images[selectedIndex];
 
     return (
         <div className="flex flex-col-reverse md:flex-row gap-4">
-            {/* Thumbnails List (Vertical on Desktop, Horizontal on Mobile) */}
+            {/* Thumbnails List */}
             <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto md:h-[500px] scrollbar-hide py-1">
-                {images.map((img, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => setSelectedIndex(idx)}
-                        className={cn(
-                            "relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all",
-                            selectedIndex === idx
-                                ? "border-primary ring-2 ring-primary/20"
-                                : "border-transparent opacity-70 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700"
-                        )}
-                    >
-                        <Image
-                            src={img}
-                            alt={`${productName} thumbnail ${idx + 1}`}
-                            fill
-                            className="object-cover"
-                            sizes="80px"
-                        />
-                    </button>
-                ))}
+                {images.map((img, idx) => {
+                    if (failedImages.includes(idx)) return null; // Hide broken thumbnails
+
+                    return (
+                        <button
+                            key={idx}
+                            onClick={() => setSelectedIndex(idx)}
+                            className={cn(
+                                "relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all",
+                                selectedIndex === idx
+                                    ? "border-primary ring-2 ring-primary/20"
+                                    : "border-transparent opacity-70 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700"
+                            )}
+                        >
+                            <Image
+                                src={img}
+                                alt={`${productName} thumbnail ${idx + 1}`}
+                                fill
+                                className="object-cover"
+                                sizes="80px"
+                                onError={() => handleImageError(idx)}
+                                unoptimized
+                            />
+                        </button>
+                    )
+                })}
 
                 {hasVideo && (
                     <button
@@ -86,13 +124,18 @@ export function ProductGallery({ images, video, productName }: ProductGalleryPro
                     )
                 ) : (
                     <Image
-                        src={images[selectedIndex] || '/images/placeholder.png'}
+                        src={currentMainImage || '/images/placeholder.png'}
                         alt={productName}
                         fill
                         className="object-contain p-4 transition-opacity duration-300"
                         priority
                         sizes="(max-width: 768px) 100vw, 50vw"
                         unoptimized
+                        onError={() => {
+                            if (selectedIndex < images.length) {
+                                handleImageError(selectedIndex);
+                            }
+                        }}
                     />
                 )}
             </div>

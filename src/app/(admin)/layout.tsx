@@ -4,14 +4,21 @@ import {
     Warehouse, CreditCard, Truck, TicketPercent, Megaphone, BarChart3,
     ShieldAlert, FileText, Headphones, TrendingUp
 } from 'lucide-react';
-import { Button } from '@/frontend/components/ui/Button';
 import { LogoutButton } from '@/frontend/components/auth/LogoutButton';
 
-export default function AdminLayout({
+import { getCurrentUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const user = await getCurrentUser();
+
+    if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        redirect('/');
+    }
     return (
         <div className="flex h-screen bg-gray-50 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300">
             {/* Sidebar */}

@@ -1,6 +1,6 @@
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { Button } from "@/frontend/components/ui/Button";
-import { TicketPercent, Plus, Power, Trash2 } from "lucide-react";
+import { TicketPercent, Power } from "lucide-react";
 import { getCoupons, createCoupon, toggleCouponStatus } from "@/backend/actions/promotion-actions";
 import { Input } from "@/frontend/components/ui/Input";
 

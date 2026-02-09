@@ -2,7 +2,7 @@ import { getOrderDetails } from "@/backend/actions/order-actions";
 import { Header } from "@/frontend/components/Header";
 import { Footer } from "@/frontend/components/Footer";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Package, MapPin, Truck, Calendar, DollarSign, ChevronLeft } from "lucide-react";
+import { Package, MapPin, Truck, DollarSign, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderActions } from "@/frontend/components/admin/AdminOrderActions";
@@ -85,10 +85,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                                 <div className="glass rounded-xl border border-border p-6">
                                     <h2 className="font-semibold mb-4">Produtos</h2>
                                     <div className="space-y-4">
+                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                         {order.items.map((item: any) => (
                                             <div key={item.id} className="flex gap-4 pb-4 border-b border-border last:border-0">
                                                 <div className="w-20 h-20 bg-gray-100 dark:bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
                                                     {item.product.imageUrl && (
+                                                        /* eslint-disable-next-line @next/next/no-img-element */
                                                         <img
                                                             src={item.product.imageUrl}
                                                             alt={item.product.name}

@@ -2,8 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { ShippingSettings } from "./ShippingSettings";
 import { FreightSimulator } from "./FreightSimulator";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Button } from "@/frontend/components/ui/Button";
-import { Truck, Settings, MapPin } from "lucide-react";
 import { CarrierManager } from "./CarrierManager";
 
 export default async function ShippingPage() {

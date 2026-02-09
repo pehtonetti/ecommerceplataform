@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { BarChart, TrendingUp, Users, ShoppingCart, Eye, MousePointer2, ArrowRight } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
 import Link from "next/link";
 
 export default function AnalyticsDashboard() {
-    const [stats, setStats] = useState({
+    const [stats] = useState({
         views: 12500,
         conversions: 3.2,
         avgTime: "4m 20s",
@@ -94,7 +94,7 @@ export default function AnalyticsDashboard() {
                         </div>
                         <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-border">
                             <p className="text-sm font-medium">🔥 Zonas de Calor (Cliques)</p>
-                            <p className="text-xs text-muted-foreground mt-1">O botão "Comprar Agora" tem 4x mais cliques que o "Adicionar ao Carrinho".</p>
+                            <p className="text-xs text-muted-foreground mt-1">O botão &quot;Comprar Agora&quot; tem 4x mais cliques que o &quot;Adicionar ao Carrinho&quot;.</p>
                         </div>
                         <Button variant="outline" className="w-full">Exportar Log de Comportamento</Button>
                     </div>

@@ -19,7 +19,7 @@ export function RestockButton({ product }: { product: { id: string, name: string
             await updateStock(product.id, Number(stock));
             toast.success("Estoque atualizado!");
             setIsOpen(false);
-        } catch (e) {
+        } catch {
             toast.error("Erro ao atualizar estoque");
         } finally {
             setLoading(false);

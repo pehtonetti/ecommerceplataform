@@ -1,6 +1,5 @@
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Button } from "@/frontend/components/ui/Button";
-import { Warehouse, Download, AlertTriangle } from "lucide-react";
+import { Warehouse, AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { RestockButton } from "./RestockButton";
 
@@ -68,6 +67,7 @@ export default async function InventoryPage() {
                                     <tr key={product.id} className="bg-white dark:bg-zinc-900/50 hover:bg-muted/10">
                                         <td className="p-4 font-medium flex items-center gap-3">
                                             {product.imageUrl && (
+                                                // eslint-disable-next-line @next/next/no-img-element
                                                 <img src={product.imageUrl} alt="" className="w-8 h-8 rounded object-cover bg-gray-100" />
                                             )}
                                             {product.name}

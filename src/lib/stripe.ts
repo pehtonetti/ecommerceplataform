@@ -1,8 +1,7 @@
 import Stripe from 'stripe';
+import { env } from '@/env';
 
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key_for_build';
-
-export const stripe = new Stripe(stripeKey, {
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
     apiVersion: '2025-11-17.clover',
     typescript: true,
 });

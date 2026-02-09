@@ -40,6 +40,7 @@ export default async function OrdersPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 {orders.map((order: any) => (
                                     <div
                                         key={order.id}
@@ -89,12 +90,14 @@ export default async function OrdersPage() {
                                             </div>
 
                                             <div className="flex gap-2 overflow-x-auto pb-2">
+                                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                                 {order.items.slice(0, 4).map((item: any) => (
                                                     <div
                                                         key={item.id}
                                                         className="w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0"
                                                     >
                                                         {item.product.imageUrl && (
+                                                            // eslint-disable-next-line @next/next/no-img-element
                                                             <img
                                                                 src={item.product.imageUrl}
                                                                 alt={item.product.name}

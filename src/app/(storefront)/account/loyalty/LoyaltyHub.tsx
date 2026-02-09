@@ -2,20 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { getLoyaltyHistory, redeemPointsForCoupon } from "@/backend/actions/loyalty-actions";
-import { FadeIn, FadeInStagger, FadeInStaggerItem } from "@/frontend/components/ui/Motion";
-import { Coins, Ticket, History, ArrowRight, Gift } from "lucide-react";
+import { FadeIn } from "@/frontend/components/ui/Motion";
+import { Coins, Ticket, History, Gift } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
 import { toast } from "sonner";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function LoyaltyHub({ user }: { user: any }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [history, setHistory] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [points, setPoints] = useState(user.loyaltyPoints || 0);
 
     useEffect(() => {
         getLoyaltyHistory().then(data => {
             setHistory(data);
-            setLoading(false);
         });
     }, []);
 
@@ -25,7 +25,7 @@ export default function LoyaltyHub({ user }: { user: any }) {
             toast.error(res.error);
         } else {
             setPoints(points - pointsToSpend);
-            toast.success(`Parabéns! Você resgatou um cupom de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(res.discountValue / 100)}`);
+            toast.success(`Parabéns! Você resgatou um cupom de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((res.discountValue || 0) / 100)}`);
             // Refresh history
             getLoyaltyHistory().then(setHistory);
         }
@@ -109,6 +109,7 @@ export default function LoyaltyHub({ user }: { user: any }) {
                                     Nenhuma movimentação ainda.
                                 </div>
                             ) : (
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 history.map((log: any) => (
                                     <div key={log.id} className="p-4 flex justify-between items-center text-sm">
                                         <div>

@@ -9,39 +9,14 @@ import { Button } from "./Button";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 export function MiniCart() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [cart, setCart] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const { cart, isOpen, openCart, closeCart, removeFromCart, updateQuantity, isLoading } = useCart();
 
-    const fetchCart = async () => {
-        setLoading(true);
-        const data = await getCart();
-        setCart(data);
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        if (isOpen) fetchCart();
-
-        // Real-time update listener
-        const handleCartUpdate = () => {
-            // If open, fetch fully. If closed, we might want to just fetch count or full cart.
-            // For simplicity, we fetch full cart to update badge.
-            fetchCart();
-        };
-
-        window.addEventListener('cart-updated', handleCartUpdate);
-        return () => window.removeEventListener('cart-updated', handleCartUpdate);
-    }, [isOpen]);
-
-    const handleRemove = async (productId: string) => {
-        const res = await removeFromCart(productId);
-        if (res.error) toast.error(res.error);
-        else fetchCart();
-    };
+    // We can rely on context for state. 
+    // Wait, the button triggers 'openCart'.
+    // The previous implementation had 'setIsOpen'.
 
     const subtotal = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.price * item.quantity), 0) || 0;
 
@@ -50,13 +25,11 @@ export function MiniCart() {
         setMounted(true);
     }, []);
 
-    // ... (rest of logic)
-
     return (
         <>
             {/* Trigger Button */}
             <button
-                onClick={() => setIsOpen(true)}
+                onClick={openCart}
                 className="relative p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
             >
                 <ShoppingBag className="w-6 h-6" />
@@ -77,7 +50,7 @@ export function MiniCart() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                onClick={() => setIsOpen(false)}
+                                onClick={closeCart}
                                 className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] cursor-pointer"
                             />
 
@@ -95,14 +68,14 @@ export function MiniCart() {
                                         <ShoppingCart className="w-5 h-5 text-primary" />
                                         <h2 className="text-xl font-bold">Resumo do Carrinho</h2>
                                     </div>
-                                    <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                                    <button onClick={closeCart} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
 
                                 {/* Items List */}
                                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                                    {loading ? (
+                                    {isLoading ? (
                                         <div className="text-center py-10 text-muted-foreground flex flex-col items-center gap-2">
                                             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                                             Carregando...
@@ -111,7 +84,7 @@ export function MiniCart() {
                                         <div className="text-center py-20">
                                             <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-zinc-300" />
                                             <p className="text-muted-foreground">Seu carrinho está vazio.</p>
-                                            <Button variant="outline" className="mt-4" onClick={() => setIsOpen(false)}>Começar a Comprar</Button>
+                                            <Button variant="outline" className="mt-4" onClick={closeCart}>Começar a Comprar</Button>
                                         </div>
                                     ) : (
                                         cart.items.map((item: any) => (
@@ -126,16 +99,16 @@ export function MiniCart() {
                                                     <div className="flex items-center gap-2 mt-2">
                                                         <div className="flex items-center border border-border rounded-lg bg-gray-50 dark:bg-zinc-800">
                                                             <button
-                                                                onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
-                                                                disabled={loading || item.quantity <= 1}
+                                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                                disabled={isLoading || item.quantity <= 1}
                                                                 className="w-6 h-6 flex items-center justify-center text-xs hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-l-lg transition-colors disabled:opacity-50"
                                                             >
                                                                 -
                                                             </button>
                                                             <span className="w-6 text-center text-xs font-medium">{item.quantity}</span>
                                                             <button
-                                                                onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
-                                                                disabled={loading}
+                                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                                disabled={isLoading}
                                                                 className="w-6 h-6 flex items-center justify-center text-xs hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-r-lg transition-colors disabled:opacity-50"
                                                             >
                                                                 +
@@ -145,7 +118,7 @@ export function MiniCart() {
                                                     </div>
 
                                                     <button
-                                                        onClick={() => handleRemove(item.id)}
+                                                        onClick={() => removeFromCart(item.id)}
                                                         className="text-[10px] text-red-500 hover:underline mt-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <Trash2 className="w-3 h-3" /> Remover
@@ -172,10 +145,10 @@ export function MiniCart() {
                                         </div>
                                         <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">Taxas e frete calculados no checkout</p>
                                         <div className="grid grid-cols-1 gap-2">
-                                            <Link href="/cart" onClick={() => setIsOpen(false)}>
+                                            <Link href="/cart" onClick={closeCart}>
                                                 <Button variant="outline" className="w-full">Ver Carrinho Completo</Button>
                                             </Link>
-                                            <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                                            <Link href="/checkout" onClick={closeCart}>
                                                 <Button className="w-full gap-2">
                                                     Finalizar Compra <ArrowRight className="w-4 h-4" />
                                                 </Button>

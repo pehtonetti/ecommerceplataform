@@ -104,6 +104,7 @@ export default function LoginPage() {
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-flex flex-col items-center gap-2 mb-2">
                             <div className="w-16 h-16 bg-white/90 dark:bg-zinc-800 rounded-2xl shadow-lg flex items-center justify-center backdrop-blur-sm p-2">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
                             </div>
                             <span className="text-2xl font-bold bg-gradient-to-br from-white to-zinc-300 bg-clip-text text-transparent drop-shadow-sm">Simplify</span>
@@ -194,6 +195,7 @@ export default function LoginPage() {
                         {/* Social Buttons */}
                         <div className="grid grid-cols-1 gap-4">
                             <button type="button" className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 transition-all font-bold text-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
                                 Google
                             </button>

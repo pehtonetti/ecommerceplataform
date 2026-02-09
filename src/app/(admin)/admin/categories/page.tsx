@@ -33,6 +33,7 @@ export default async function CategoriesPage() {
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {categories.map((cat: any) => (
                             <div key={cat.id} className="glass p-6 rounded-xl border border-border hover:border-primary transition-colors">
                                 <div className="flex items-start justify-between">

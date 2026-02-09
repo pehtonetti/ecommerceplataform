@@ -3,12 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Star, ShieldCheck, Heart } from "lucide-react";
 import { Button } from "./Button";
-import { addToCart } from "@/backend/actions/cart-actions";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 export function QuickViewModal({ product, isOpen, onClose }: { product: any, isOpen: boolean, onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
+    const { addToCart } = useCart();
 
     if (!product) return null;
 
@@ -16,14 +17,9 @@ export function QuickViewModal({ product, isOpen, onClose }: { product: any, isO
 
     const handleAddToCart = async () => {
         setIsLoading(true);
-        const res = await addToCart(product.id, 1);
+        await addToCart(product.id, 1);
         setIsLoading(false);
-        if (res.success) {
-            toast.success("Adicionado ao carrinho!");
-            onClose();
-        } else {
-            toast.error(res.error || "Erro ao adicionar");
-        }
+        onClose();
     };
 
     return (

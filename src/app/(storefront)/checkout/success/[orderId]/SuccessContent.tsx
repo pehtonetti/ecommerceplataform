@@ -9,27 +9,40 @@ import { AiProductRecommendations } from "@/frontend/components/product/AiProduc
 
 export function SuccessContent({ orderId }: { orderId: string }) {
     const [status, setStatus] = useState(0);
+    const [particles, setParticles] = useState<{ x: number, y: number }[]>([]);
 
     useEffect(() => {
         // Simple step animation for order status
         const interval = setInterval(() => {
             setStatus(s => (s < 3 ? s + 1 : s));
         }, 3000);
-        return () => clearInterval(interval);
+
+        // Avoid synchronous setState warning
+        const timer = setTimeout(() => {
+            setParticles(Array.from({ length: 12 }).map(() => ({
+                x: (Math.random() - 0.5) * 600,
+                y: (Math.random() - 0.5) * 600
+            })));
+        }, 0);
+
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timer);
+        };
     }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black font-sans flex flex-col items-center justify-center p-4 pt-32">
             {/* Confetti Animation (Simulated with random sparkles) */}
-            {[...Array(12)].map((_, i) => (
+            {particles.map((p, i) => (
                 <motion.div
                     key={i}
                     initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
                     animate={{
                         opacity: [0, 1, 0],
                         scale: [0, 1, 0.5],
-                        x: (Math.random() - 0.5) * 600,
-                        y: (Math.random() - 0.5) * 600
+                        x: p.x,
+                        y: p.y
                     }}
                     transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                     className="fixed text-primary pointer-events-none"

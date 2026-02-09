@@ -4,7 +4,6 @@ import { deleteProduct } from "@/backend/actions/product-actions";
 import { Button } from "@/frontend/components/ui/Button";
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export function DeleteProductButton({ id }: { id: string }) {
     const [isDeleting, setIsDeleting] = useState(false);

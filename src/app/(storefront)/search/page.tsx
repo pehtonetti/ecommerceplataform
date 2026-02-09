@@ -24,6 +24,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         minPrice: params.minPrice ? parseFloat(params.minPrice) : undefined,
         maxPrice: params.maxPrice ? parseFloat(params.maxPrice) : undefined,
         inStock: params.inStock === 'true',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sortBy: params.sortBy as any || 'newest'
     };
 
@@ -69,6 +70,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                         {products.map((product: any) => (
                                             <ProductCard key={product.id} product={product} />
                                         ))}

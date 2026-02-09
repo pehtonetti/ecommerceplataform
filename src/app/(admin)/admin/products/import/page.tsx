@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, FileSpice, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
 import { toast } from "sonner";
 import { processImportFile, saveImportedProducts } from "@/backend/actions/import-products";
@@ -10,6 +10,7 @@ export default function ImportProductsPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [parsedData, setParsedData] = useState<any[]>([]);
     const [step, setStep] = useState<'upload' | 'review' | 'success'>('upload');
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,14 +31,14 @@ export default function ImportProductsPage() {
 
             const result = await processImportFile(formData);
 
-            if (result.success) {
+            if (result.success && result.data) {
                 setParsedData(result.data);
                 setStep('review');
                 toast.success(`${result.data.length} produtos analisados com sucesso!`);
             } else {
                 toast.error("Erro ao analisar arquivo: " + result.error);
             }
-        } catch (error) {
+        } catch {
             toast.error("Erro inesperado ao processar arquivo.");
         } finally {
             setIsAnalyzing(false);
@@ -54,7 +55,7 @@ export default function ImportProductsPage() {
             } else {
                 toast.error("Erro ao salvar: " + res.error);
             }
-        } catch (error) {
+        } catch {
             toast.error("Erro ao salvar produtos.");
         } finally {
             setIsSaving(false);
@@ -88,7 +89,7 @@ export default function ImportProductsPage() {
 
                     {file && (
                         <div className="mt-8 p-4 bg-white dark:bg-zinc-800 rounded-lg inline-flex items-center gap-4 shadow-sm">
-                            <FileSpice className="w-8 h-8 text-green-600" />
+                            <FileText className="w-8 h-8 text-green-600" />
                             <div className="text-left">
                                 <p className="font-bold">{file.name}</p>
                                 <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>

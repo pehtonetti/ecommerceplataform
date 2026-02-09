@@ -1,7 +1,7 @@
 import { Header } from "@/frontend/components/Header";
 import { Footer } from "@/frontend/components/Footer";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Shield, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 export default function TermsPage() {
     return (

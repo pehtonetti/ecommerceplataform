@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+build
+dist
+services
+prisma/seed.ts
+prisma/seed-apple.ts
+prisma/seed-apple.js

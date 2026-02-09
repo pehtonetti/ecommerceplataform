@@ -155,7 +155,7 @@ export async function checkoutOrder(data: {
 
         let redirectUrl = `/checkout/success/${order.id}`;
 
-        // 5. Stripe Session Generation
+        // 5. Payment Method Handling
         if (data.paymentMethod === 'credit_card') {
             try {
                 const { createCheckoutSession } = await import('@/lib/stripe');
@@ -174,6 +174,9 @@ export async function checkoutOrder(data: {
                 console.error("Stripe Session Error:", stripeError);
                 // We might want to return error or fallback to manual payment
             }
+        } else if (data.paymentMethod === 'pix') {
+            // Redirect to PIX payment page
+            redirectUrl = `/checkout/pix/${order.id}`;
         }
 
         // 5. Trigger Fiscal Emission (Async/Fire-and-forget)

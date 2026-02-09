@@ -7,6 +7,7 @@ import { createCarrier, toggleCarrierStatus, deleteCarrier } from "@/backend/act
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CarrierManager({ carriers }: { carriers: any[] }) {
     const [isAdding, setIsAdding] = useState(false);
     const router = useRouter();

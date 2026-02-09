@@ -3,32 +3,31 @@
 import { Button } from "@/frontend/components/ui/Button";
 import { ShoppingCart, Heart, Share2, ShieldCheck } from "lucide-react";
 import { Product } from "@/backend/types";
-import { addToCart } from "@/backend/actions/cart-actions";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ShippingCalculator } from "@/frontend/components/product/ShippingCalculator";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 export function ProductInfo({ product }: { product: Product }) {
     const [isLoading, setIsLoading] = useState(false);
+
+    // Parse variants safely
+    const colors = Array.isArray(product.colors) ? product.colors : [];
+    const capacities = Array.isArray(product.capacities) ? product.capacities : [];
+
+    const [selectedColor, setSelectedColor] = useState<string | undefined>(colors.length > 0 ? colors[0] : undefined);
+    const [selectedCapacity, setSelectedCapacity] = useState<string | undefined>(capacities.length > 0 ? capacities[0] : undefined);
+
+    const { addToCart } = useCart();
     const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: product.currency }).format(product.price / 100);
 
     const handleAddToCart = async () => {
         setIsLoading(true);
-        try {
-            const res = await addToCart(product.id, 1);
-            if (res?.success) {
-                toast.success("Produto adicionado ao carrinho!");
-                window.dispatchEvent(new Event('cart-updated'));
-            } else if (res?.error === 'NOT_AUTHENTICATED') {
-                toast.error("Faça login para adicionar ao carrinho");
-            } else {
-                toast.error("Erro ao adicionar produto");
-            }
-        } catch (error) {
-            toast.error("Erro inesperado");
-        } finally {
-            setIsLoading(false);
-        }
+        await addToCart(product.id, 1, {
+            color: selectedColor,
+            capacity: selectedCapacity
+        });
+        setIsLoading(false);
     };
 
     return (
@@ -45,15 +44,49 @@ export function ProductInfo({ product }: { product: Product }) {
                 </div>
             </div>
 
-            <div className="border-t border-b border-border py-4 space-y-1">
+            <div className="border-t border-b border-border py-4 space-y-4">
                 <div className="flex items-end gap-2">
                     <span className="text-4xl font-bold text-gray-900 dark:text-white">{priceFormatted}</span>
-                    <span className="text-sm text-gray-500 mb-1.5 line-through">
-                        {/* Mock de "De: Por:" apenas visual */}
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: product.currency }).format((product.price * 1.2) / 100)}
-                    </span>
                 </div>
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+
+                {/* Variant Selectors */}
+                {colors.length > 0 && (
+                    <div className="space-y-2">
+                        <span className="text-sm font-medium text-muted-foreground">Cor: <span className="text-foreground font-bold">{selectedColor}</span></span>
+                        <div className="flex items-center gap-2">
+                            {colors.map((color: string) => (
+                                <button
+                                    key={color}
+                                    onClick={() => setSelectedColor(color)}
+                                    className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === color ? 'border-primary ring-2 ring-primary/30 ring-offset-2 scale-110' : 'border-border hover:scale-110'}`}
+                                    style={{ backgroundColor: color.toLowerCase() }} // Naive color mapping, works for 'red', 'blue', etc. For complex names, might need a map or just styling.
+                                    title={color}
+                                >
+                                    {/* Fallback visual for non-css colors like 'Space Gray' if background fails? */}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {capacities.length > 0 && (
+                    <div className="space-y-2">
+                        <span className="text-sm font-medium text-muted-foreground">Armazenamento:</span>
+                        <div className="flex flex-wrap gap-2">
+                            {capacities.map((cap: string) => (
+                                <button
+                                    key={cap}
+                                    onClick={() => setSelectedCapacity(cap)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all ${selectedCapacity === cap ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border'}`}
+                                >
+                                    {cap}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium pt-2">
                     Em até 10x sem juros de {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: product.currency }).format((product.price / 100) / 10)}
                 </p>
             </div>

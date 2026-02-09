@@ -4,15 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, ShoppingBag, User, ArrowRightLeft } from "lucide-react";
 import { useCompare } from "@/frontend/contexts/CompareContext";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 export function MobileNav() {
     const pathname = usePathname();
     const { compareList } = useCompare();
+    const { cart } = useCart();
 
     const tabs = [
         { href: "/", icon: Home, label: "Início" },
         { href: "/search", icon: Search, label: "Buscar" },
-        { href: "/cart", icon: ShoppingBag, label: "Carrinho" },
+        { href: "/cart", icon: ShoppingBag, label: "Carrinho", count: cart?.items?.length || 0 },
         { href: "/compare", icon: ArrowRightLeft, label: "Comparar", count: compareList.length },
         { href: "/account", icon: User, label: "Conta" },
     ];

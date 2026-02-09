@@ -20,7 +20,10 @@ export interface Product {
     stock: number;
     active: boolean;
     createdAt: string;
-    videoUrl?: string;
+    videoUrl?: string | null;
+    images?: Array<{ url: string }>;
+    colors?: any; // JSON
+    capacities?: any; // JSON
 }
 
 export interface StoreConfig {

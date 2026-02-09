@@ -100,7 +100,7 @@ export default function ContactPage() {
                             <div className="glass rounded-xl border border-border p-6">
                                 <h3 className="font-semibold mb-2">Como rastrear meu pedido?</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    Após o envio, você receberá um código de rastreamento por e-mail. Você também pode acompanhar em "Meus Pedidos".
+                                    Após o envio, você receberá um código de rastreamento por e-mail. Você também pode acompanhar em &quot;Meus Pedidos&quot;.
                                 </p>
                             </div>
 

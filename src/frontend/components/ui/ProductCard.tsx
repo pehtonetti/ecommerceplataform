@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, ShoppingCart, Star, Heart, ZoomIn, ArrowRightLeft } from "lucide-react";
-import { addToCart } from "@/backend/actions/cart-actions";
 import { toggleWishlist } from "@/backend/actions/wishlist-actions";
 import { toast } from "sonner";
 import { QuickViewModal } from "./QuickViewModal";
 import { useCompare } from "@/frontend/contexts/CompareContext";
+import { useCart } from "@/frontend/contexts/CartContext";
 
 interface Product {
   id: string;
@@ -32,6 +32,7 @@ export function ProductCard({ product, userId }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const { addToCompare } = useCompare();
+  const { addToCart } = useCart();
   const router = useRouter();
 
   // Combine main imageUrl with extra images, filtered for uniqueness and valid strings
@@ -69,21 +70,8 @@ export function ProductCard({ product, userId }: ProductCardProps) {
     e.stopPropagation();
 
     setIsAdding(true);
-    const result = await addToCart(product.id, 1);
+    await addToCart(product.id, 1);
     setIsAdding(false);
-
-    if (result.error === 'NOT_AUTHENTICATED') {
-      toast.error('Faça login para adicionar ao carrinho');
-      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
-
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success('Produto adicionado ao carrinho!');
-      router.refresh();
-    }
   };
 
   return (
@@ -133,26 +121,55 @@ export function ProductCard({ product, userId }: ProductCardProps) {
           <ArrowRightLeft className="w-4 h-4" />
         </button>
         {/* Image Display */}
-        {product.videoUrl && isHovered && activeImageIndex === 0 ? (
-          // Show video only on first frame of hover if desired, or maybe priority to video? 
-          // User asked for 3 photos gallery, let's stick to photos for the gallery effect primarily.
-          // But if video exists, maybe it shouldn't auto-play over the gallery unless requested.
-          // I will keep the video logic secondary or exclusive. 
-          // Let's stick to the requested "3 photos".
-          null
-        ) : null}
-
         <div className="w-full h-full relative">
-          {displayImages.length > 0 ? (
+          {(product.videoUrl && (!displayImages.length || (isHovered && activeImageIndex === displayImages.length))) ? (
+            <video
+              src={product.videoUrl}
+              className="w-full h-full object-cover rounded-md"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : displayImages.length > 0 ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={currentImage}
+              src={displayImages[activeImageIndex]}
               alt={product.name}
               className={`w-full h-full object-contain transition-all duration-500 ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
+              onError={(e) => {
+                // Remove broken image from display list dynamically
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                // If this was the only image, we will fall through to placeholder or video logic in next render if we updating state, 
+                // but modifying state inside onError can cause loop.
+                // Safer approach: Try to set src to next available or video placeholder
+                if (product.videoUrl) {
+                  // Force video replacement logic visually
+                  const video = document.createElement('video');
+                  video.src = product.videoUrl;
+                  video.autoplay = true;
+                  video.muted = true;
+                  video.loop = true;
+                  video.className = target.className.replace('object-contain', 'object-cover');
+                  target.parentNode?.appendChild(video);
+                  target.remove();
+                }
+              }}
+            />
+          ) : product.videoUrl ? (
+            <video
+              src={product.videoUrl}
+              className="w-full h-full object-cover rounded-md"
+              autoPlay
+              muted
+              loop
+              playsInline
             />
           ) : (
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
-              <span className="text-sm">Imagem indisponível</span>
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-muted text-muted-foreground flex-col gap-2">
+              <ZoomIn className="w-8 h-8 opacity-20" />
+              <span className="text-xs font-medium">Sem imagem</span>
             </div>
           )}
 

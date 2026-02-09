@@ -44,7 +44,7 @@ async function getRecentlyViewedProducts() {
     });
 
     return products;
-  } catch (error) {
+  } catch {
     // If ProductView table doesn't exist yet, return newest products as fallback
     console.log('ProductView table not found, using fallback');
     return await prisma.product.findMany({
@@ -130,18 +130,37 @@ async function getNewProducts() {
   });
 }
 
+async function getAppleProducts() {
+  return await prisma.product.findMany({
+    where: {
+      category: 'Apple',
+      active: true
+    },
+    take: 8,
+    orderBy: { price: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      imageUrl: true,
+      category: true,
+    },
+  });
+}
+
 export default async function HomePage() {
-  const [recentlyViewed, promoProducts, trendingProducts, newProducts] = await Promise.all([
+  const [recentlyViewed, promoProducts, trendingProducts, newProducts, appleProducts] = await Promise.all([
     getRecentlyViewedProducts(),
     getPromoProducts(),
     getTrendingProducts(),
     getNewProducts(),
+    getAppleProducts(),
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 via-purple-50 to-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-black" suppressHydrationWarning>
       {/* Main Content */}
-      <div className="w-full">
+      <div className="w-full" suppressHydrationWarning>
         {/* Promotional Banner Carousel */}
         <div className="mb-0">
           <PromoBannerCarousel />
@@ -160,6 +179,17 @@ export default async function HomePage() {
               products={trendingProducts}
               viewAllLink="/search?sort=bestselling"
               icon={<TrendingUp className="w-6 h-6" />}
+            />
+          )}
+
+          {/* APPLE ECOSYSTEM SECTION */}
+          {appleProducts.length > 0 && (
+            <ProductSection
+              title="Ecossistema Apple"
+              subtitle="A melhor experiência em tecnologia premium"
+              products={appleProducts}
+              viewAllLink="/search?category=apple"
+              icon={<Heart className="w-6 h-6 text-black dark:text-white" />}
             />
           )}
 

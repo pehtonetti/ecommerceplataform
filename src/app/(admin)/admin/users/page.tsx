@@ -4,6 +4,7 @@ import { Plus, User, Shield, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { DeleteUserButton } from "./DeleteButton";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const roleMap: Record<string, { label: string, icon: any, color: string }> = {
     customer: { label: 'Cliente', icon: User, color: 'text-blue-500 bg-blue-500/10' },
     editor: { label: 'Funcionário', icon: Briefcase, color: 'text-orange-500 bg-orange-500/10' },

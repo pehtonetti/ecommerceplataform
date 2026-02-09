@@ -29,7 +29,7 @@ async function getCartSessionId() {
 /**
  * Adiciona produto ao carrinho
  */
-export async function addToCart(productId: string, quantity: number = 1) {
+export async function addToCart(productId: string, quantity: number = 1, options?: { color?: string, capacity?: string }) {
     try {
         const user = await import("@/lib/auth").then(m => m.getCurrentUser());
 
@@ -63,15 +63,24 @@ export async function addToCart(productId: string, quantity: number = 1) {
                     items: {
                         create: {
                             productId,
-                            quantity
+                            quantity,
+                            selectedColor: options?.color,
+                            selectedCapacity: options?.capacity
                         }
                     }
                 },
                 include: { items: true }
             });
         } else {
-            // Verificar se produto já está no carrinho
-            const existingItem = cart.items.find(item => item.productId === productId);
+            // Verificar se produto já está no carrinho COM AS MESMAS OPÇÕES
+            // Note: In Javascript we have to filter manually if unique constraint isn't perfect or just to be safe logic
+            // But Prisma find requires ID or unique. We can't easily "find" by composite fields in the array
+            // We iterate.
+            const existingItem = cart.items.find(item =>
+                item.productId === productId &&
+                (item as any).selectedColor === options?.color &&
+                (item as any).selectedCapacity === options?.capacity
+            );
 
             if (existingItem) {
                 // Atualizar quantidade
@@ -87,7 +96,9 @@ export async function addToCart(productId: string, quantity: number = 1) {
                     data: {
                         cartId: cart.id,
                         productId,
-                        quantity
+                        quantity,
+                        selectedColor: options?.color,
+                        selectedCapacity: options?.capacity
                     }
                 });
             }
@@ -191,7 +202,10 @@ export async function getCart(userId?: string) {
             }
         }
 
-        return { success: true, cart };
+        // Serialize dates to avoid hydration mismatch
+        const serializedCart = cart ? JSON.parse(JSON.stringify(cart)) : null;
+
+        return { success: true, cart: serializedCart };
     } catch (error) {
         console.error('Erro ao buscar carrinho:', error);
         return { error: 'Erro ao buscar carrinho' };

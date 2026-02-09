@@ -67,6 +67,10 @@ model Product {
   category    String
   active      Boolean        @default(true)
 
+  // Variantes
+  colors      Json?          // Ex: ["Vermelho", "Azul"]
+  capacities  Json?          // Ex: ["128GB", "256GB"]
+
   // Logística
   weight      Int?           // Peso em gramas
   length      Int?           // Comprimento em cm
@@ -113,6 +117,10 @@ model CartItem {
   productId String
   product   Product @relation(fields: [productId], references: [id], map: "CartItem_Product_FK_v_FINAL_999")
   quantity  Int
+  
+  // Variantes selecionadas
+  selectedColor    String?
+  selectedCapacity String?
 
   @@index([cartId])
   @@index([productId])
@@ -148,6 +156,12 @@ model Order {
   total           Int         // Subtotal + Frete + Impostos - Desconto
   status          String      @default("pending")
   
+  // Pagamento PIX
+  pixQRCode       String?     @db.Text // QR Code PIX (Copia e Cola)
+  pixTransactionId String?    // ID da transação PIX
+  pixExpiresAt    DateTime?   // Data de expiração do QR Code
+  pixPaidAt       DateTime?   // Data de confirmação do pagamento
+  
   invoices        Invoice[]
   
   createdAt       DateTime    @default(now())
@@ -182,6 +196,10 @@ model StoreConfig {
   // Configurações de Atendimento
   whatsappNumber String? // Número do WhatsApp da empresa (com DDI+DDD)
   whatsappMessage String? // Mensagem padrão
+  
+  // Configurações de Pagamento PIX
+  pixKey String? // Chave PIX da loja (CPF, CNPJ, email, telefone ou aleatória)
+  merchantCity String? @default("Sao Paulo") // Cidade do estabelecimento para PIX
   
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

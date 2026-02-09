@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
-import { Settings, Save, Loader2, MapPin } from "lucide-react";
+import { Save, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { updateStoreOriginZip } from "@/backend/actions/store-config-actions";
 
@@ -16,7 +16,7 @@ export function ShippingSettings({ initialZip }: { initialZip: string }) {
         try {
             await updateStoreOriginZip(zip);
             toast.success("CEP de origem atualizado!");
-        } catch (error) {
+        } catch {
             toast.error("Erro ao atualizar CEP");
         } finally {
             setLoading(false);

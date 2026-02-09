@@ -20,7 +20,7 @@ export function CreateCategoryButton() {
             await createCategory(formData);
             toast.success("Categoria criada com sucesso!");
             setIsOpen(false);
-        } catch (error) {
+        } catch {
             toast.error("Erro ao criar categoria");
         } finally {
             setLoading(false);

@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { getWishlist } from "@/backend/actions/wishlist-actions";
-import { FadeIn, FadeInStagger, FadeInStaggerItem } from "@/frontend/components/ui/Motion";
+import { FadeIn } from "@/frontend/components/ui/Motion";
 import { ProductCard } from "@/frontend/components/ui/ProductCard";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/frontend/components/ui/Button";
 
 export default function WishlistPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getWishlist().then(data => {
-            setItems(data);
+        getWishlist().then((data: any) => {
+            if (data?.items) {
+                setItems(data.items);
+            }
             setLoading(false);
         });
     }, []);
@@ -39,15 +42,16 @@ export default function WishlistPage() {
                         </Link>
                     </div>
                 ) : (
-                    <FadeInStagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {items.map((item: any) => (
-                            <FadeInStaggerItem key={item.id}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {items.map((item: any, index: number) => (
+                            <FadeIn key={item.id} delay={index * 0.1}>
                                 <div className="relative group">
                                     <ProductCard product={item.product} />
                                 </div>
-                            </FadeInStaggerItem>
+                            </FadeIn>
                         ))}
-                    </FadeInStagger>
+                    </div>
                 )}
             </FadeIn>
         </div>
