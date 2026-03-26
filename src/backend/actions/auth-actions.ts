@@ -48,6 +48,14 @@ export async function login(formData: FormData) {
             path: '/',
         });
 
+        // Adiciona um cookie de papel para validação rápida no middleware
+        cookieStore.set('user_role', user.role, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+        });
+
         // Return success with redirect URL instead of redirecting directly
         // This allows the client to handle the redirect smoothly
         const redirectUrl = (user.role === 'admin' || user.role === 'editor') ? '/admin' : '/';
@@ -64,6 +72,8 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-    (await cookies()).delete(COOKIE_NAME);
+    const cookieStore = await cookies();
+    cookieStore.delete(COOKIE_NAME);
+    cookieStore.delete('user_role');
     redirect('/');
 }

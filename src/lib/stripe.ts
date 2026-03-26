@@ -35,6 +35,7 @@ export async function createCheckoutSession(params: {
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         customer_email: params.customerEmail,
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expira em 30 min se não pagar
         metadata: {
             orderId: params.orderId,
         },

@@ -28,56 +28,46 @@ export function CookieConsent() {
     if (!showBanner) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 glass border-t border-border shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="container mx-auto max-w-6xl">
-                <div className="flex items-start gap-4">
-                    {/* Icon */}
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Cookie className="w-5 h-5 text-primary" />
-                    </div>
+        <div className="fixed bottom-6 left-6 right-6 md:left-auto md:right-8 md:w-[420px] z-50 p-6 bg-white/80 backdrop-blur-2xl border border-zinc-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[32px] animate-in slide-in-from-bottom-10 duration-500">
+            <div className="relative">
+                <button
+                    onClick={rejectCookies}
+                    className="absolute -top-1 -right-1 p-2 text-zinc-400 hover:text-zinc-900 transition-colors"
+                    aria-label="Fechar"
+                >
+                    <X className="w-4 h-4" />
+                </button>
 
-                    {/* Content */}
-                    <div className="flex-1">
-                        <h3 className="font-semibold mb-2">Este site usa cookies 🍪</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Utilizamos cookies para melhorar sua experiência, personalizar conteúdo e analisar nosso tráfego.
-                            Ao clicar em "Aceitar", você concorda com o uso de cookies conforme nossa{' '}
-                            <Link href="/privacy" className="text-primary hover:underline">
-                                Política de Privacidade
-                            </Link>.
-                        </p>
-
-                        {/* Actions */}
-                        <div className="flex flex-wrap gap-3">
-                            <button
-                                onClick={acceptCookies}
-                                className="bg-primary text-primary-foreground hover:opacity-90 px-6 py-2 rounded-lg font-medium transition-all text-sm"
-                            >
-                                Aceitar Todos
-                            </button>
-                            <button
-                                onClick={rejectCookies}
-                                className="border border-border hover:bg-accent px-6 py-2 rounded-lg font-medium transition-all text-sm"
-                            >
-                                Rejeitar
-                            </button>
-                            <Link
-                                href="/privacy"
-                                className="border border-border hover:bg-accent px-6 py-2 rounded-lg font-medium transition-all text-sm inline-flex items-center"
-                            >
-                                Saiba Mais
-                            </Link>
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-200">
+                            <Cookie className="w-5 h-5 text-white" />
                         </div>
+                        <h3 className="font-semibold text-zinc-900 text-lg">Cookies & Privacidade</h3>
                     </div>
 
-                    {/* Close Button */}
-                    <button
-                        onClick={rejectCookies}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
-                        aria-label="Fechar"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                    <p className="text-sm text-zinc-500 leading-relaxed">
+                        Utilizamos cookies para personalizar sua experiência e analisar nosso tráfego em conformidade com a LGPD. 
+                        Ao navegar, você concorda com nossa{' '}
+                        <Link href="/privacy" className="text-zinc-900 font-medium hover:underline">
+                            Política de Privacidade
+                        </Link>.
+                    </p>
+
+                    <div className="flex gap-2 pt-2">
+                        <button
+                            onClick={acceptCookies}
+                            className="flex-1 bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-2.5 rounded-2xl font-medium transition-all text-sm shadow-md"
+                        >
+                            Aceitar Todos
+                        </button>
+                        <button
+                            onClick={rejectCookies}
+                            className="flex-1 bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 px-4 py-2.5 rounded-2xl font-medium transition-all text-sm"
+                        >
+                            Recusar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -107,7 +107,7 @@ export function ProductInfo({ product }: { product: Product }) {
                     </div>
                 )}
 
-                <ShippingCalculator />
+                <ShippingCalculator productId={product.id} />
 
                 <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/10 text-blue-700 dark:text-blue-400 rounded-lg border border-blue-100 dark:border-blue-900/20 text-sm">
                     <span className="font-bold">✨ Reward:</span> Compre e ganhe {Math.floor(product.price / 100)} pontos de fidelidade!

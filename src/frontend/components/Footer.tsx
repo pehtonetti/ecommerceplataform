@@ -94,9 +94,9 @@ export function Footer() {
                             </ul>
 
                             <h4 className="font-bold mb-4 text-xs uppercase tracking-wider text-foreground">Pagamento</h4>
-                            <div className="flex gap-2 text-zinc-600 dark:text-zinc-400">
+                            <div suppressHydrationWarning className="flex gap-2 text-zinc-600 dark:text-zinc-400">
                                 <CreditCard className="w-8 h-8" />
-                                <div className="w-8 h-8 border border-zinc-300 dark:border-zinc-700 rounded flex items-center justify-center font-bold text-xs">PIX</div>
+                                <div suppressHydrationWarning className="w-8 h-8 border border-zinc-300 dark:border-zinc-700 rounded flex items-center justify-center font-bold text-xs">PIX</div>
                             </div>
                         </div>
                     </div>

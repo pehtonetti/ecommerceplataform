@@ -47,29 +47,41 @@ export function OrderActions({ order }: { order: any }) {
                             </div>
                             <div>
                                 <h4 className="font-semibold text-sm">Pedido Recebido</h4>
-                                <p className="text-xs text-muted-foreground">18/12/2024 - 10:30</p>
-                                <p className="text-sm mt-1">Pagamento confirmado.</p>
+                                <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-sm mt-1">{order.status === 'pending' ? 'Aguardando pagamento...' : 'Aguardando processamento.'}</p>
                             </div>
                         </div>
 
                         <div className="relative flex gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-zinc-950 ${order.status !== 'pending' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-zinc-950 ${!['pending', 'paid'].includes(order.status) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Em Processamento</h4>
+                                <p className="text-xs text-muted-foreground">{['processing', 'shipped', 'delivered'].includes(order.status) ? 'Concluído' : 'Pendente'}</p>
+                            </div>
+                        </div>
+
+                        <div className="relative flex gap-4">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-zinc-950 ${['shipped', 'delivered'].includes(order.status) ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
                                 <Truck className="w-5 h-5" />
                             </div>
                             <div>
                                 <h4 className="font-semibold text-sm">Em Trânsito</h4>
-                                <p className="text-xs text-muted-foreground">Aguardando atualização...</p>
-                                <p className="text-sm mt-1"></p>
+                                {order.trackingCode && <p className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 p-1 rounded mt-1">Ref: {order.trackingCode}</p>}
+                                <p className="text-sm mt-1">{order.status === 'shipped' ? 'A caminho do destinatário' : ''}</p>
                             </div>
                         </div>
 
                         <div className="relative flex gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-zinc-950 ${order.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-zinc-950 ${order.status === 'delivered' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'}`}>
                                 <Check className="w-5 h-5" />
                             </div>
                             <div>
                                 <h4 className="font-semibold text-sm">Entregue</h4>
-                                <p className="text-xs text-muted-foreground">-</p>
+                                <p className="text-xs text-muted-foreground">{order.status === 'delivered' ? 'Pedido entregue com sucesso!' : '-'}</p>
                             </div>
                         </div>
                     </div>

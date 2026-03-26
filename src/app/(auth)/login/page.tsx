@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { login } from '@/backend/actions/auth-actions';
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ChevronRight } from 'lucide-react';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     return (
         // Premium Background with Vignette Effect
-        <div className="flex items-center justify-center p-4 min-h-screen w-full fixed inset-0 bg-[#010715] overflow-hidden">
+        <div className="flex items-center justify-center min-h-screen w-full bg-[#010715] relative overflow-hidden py-12 px-4">
             {/* Force body background to prevent white flashes or margins */}
             <style jsx global>{`
                 body { background-color: #010715 !important; }
@@ -97,9 +97,9 @@ export default function LoginPage() {
                 </div>
             )}
 
-            <div className="w-full max-w-md relative z-10 scale-[0.8] origin-center">
-                {/* Login Form with iOS Glass Effect */}
-                <div className="glass-ios rounded-3xl p-8 backdrop-saturate-150">
+            <div className="w-full max-w-xl relative z-10 px-4">
+                {/* Modern Dark Glassmorphism - NO WHITE BORDERS */}
+                <div className="bg-black/40 backdrop-blur-3xl rounded-[2.5rem] p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5">
                     {/* Integrated Header */}
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-flex flex-col items-center gap-2 mb-2">
@@ -109,26 +109,28 @@ export default function LoginPage() {
                             </div>
                             <span className="text-2xl font-bold bg-gradient-to-br from-white to-zinc-300 bg-clip-text text-transparent drop-shadow-sm">Simplify</span>
                         </Link>
-                        <h1 className="text-3xl font-bold mt-4 text-slate-900 dark:text-white tracking-tight">Bem-vindo de Volta</h1>
-                        <p className="text-slate-600 dark:text-slate-400 mt-2 font-medium">
-                            Entre para acessar sua conta
+                        <h1 className="text-4xl font-semibold mt-6 text-white tracking-tight">
+                            Entrar
+                        </h1>
+                        <p className="text-zinc-400 mt-3 text-lg">
+                            Use seu ID Simplify para continuar.
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                                E-mail
+                            <label htmlFor="email" className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-3 ml-1">
+                                Endereço de E-mail
                             </label>
                             <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
                                 <input
                                     type="email"
                                     id="email"
                                     name="email"
                                     required
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/80 dark:focus:bg-black/40 transition-all font-medium placeholder:text-slate-400"
+                                    className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-white/5 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-white/10 transition-all font-medium text-white placeholder:text-zinc-600"
                                     placeholder="seu@email.com"
                                     disabled={isLoading}
                                 />
@@ -137,29 +139,29 @@ export default function LoginPage() {
 
                         {/* Password */}
                         <div>
-                            <div className="flex items-center justify-between mb-2 ml-1">
-                                <label htmlFor="password" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                            <div className="flex items-center justify-between mb-3 ml-1">
+                                <label htmlFor="password" className="block text-[11px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
                                     Senha
                                 </label>
-                                <Link href="/forgot-password" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline">
-                                    Esqueceu a senha?
+                                <Link href="/forgot-password" className={`text-[11px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider ${isLoading ? 'pointer-events-none opacity-50' : ''}`}>
+                                    Esqueceu?
                                 </Link>
                             </div>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     id="password"
                                     name="password"
                                     required
-                                    className="w-full pl-11 pr-12 py-3.5 rounded-xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/80 dark:focus:bg-black/40 transition-all font-medium placeholder:text-slate-400"
+                                    className="w-full pl-12 pr-12 py-4 rounded-xl border border-white/10 bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-white/10 transition-all font-medium text-white"
                                     placeholder="••••••••"
                                     disabled={isLoading}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
@@ -167,74 +169,42 @@ export default function LoginPage() {
                         </div>
 
                         {/* Submit Button */}
+                        {/* Submit Button - Apple Style */}
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${success ? 'bg-green-500 hover:bg-green-600' : 'bg-indigo-600 hover:bg-indigo-700 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'}`}
+                            className={`w-full py-4 rounded-xl font-bold text-white transition-all active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${success ? 'bg-green-600' : 'bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-500/10'}`}
                         >
                             {isLoading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    {success ? 'Entrando...' : 'Verificando...'}
-                                </>
+                                <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                success ? 'Redirecionando...' : 'Entrar na Conta'
+                                success ? 'Pronto!' : 'Entrar'
                             )}
                         </button>
 
-                        {/* Social Login Divider */}
-                        <div className="relative my-8">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-slate-200/60 dark:border-white/10"></span>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-[#f8faff] dark:bg-[#0c0c0e] px-4 text-slate-500 font-bold tracking-widest">Ou continue com</span>
-                            </div>
-                        </div>
 
-                        {/* Social Buttons */}
-                        <div className="grid grid-cols-1 gap-4">
-                            <button type="button" className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 transition-all font-bold text-sm">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-                                Google
-                            </button>
-                        </div>
                     </form>
 
-                    {/* Register Link */}
-                    <div className="mt-8 text-center pt-6 border-t border-slate-200/60 dark:border-white/10">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Ainda não tem conta?{' '}
-                            <Link href="/register" className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline">
-                                Criar conta grátis
-                            </Link>
+                    {/* Register Section - Minimalist & High Impact */}
+                    <div className="mt-16 text-center pt-10 border-t border-white/10">
+                        <p className="text-white text-xl font-medium mb-6">
+                            Não tem um ID Simplify?
                         </p>
+                        <Link
+                            href="/register"
+                            className="text-indigo-400 font-bold text-lg hover:text-white transition-colors flex items-center justify-center gap-2 group"
+                        >
+                            <span>Crie o seu agora</span>
+                            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
                     </div>
                 </div>
 
-                {/* Quick Access */}
-                <div className="mt-6 p-4 glass-ios rounded-xl border border-white/30 dark:border-white/10">
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 text-center">
-                        🚀 Acesso Rápido (Dev)
-                    </p>
-                    <div className="flex justify-between items-center text-xs">
-                        <div className="text-center w-1/2 border-r border-slate-200/50 dark:border-white/10 pr-2">
-                            <span className="block font-semibold text-slate-500 text-[10px] mb-1">ADMIN</span>
-                            <code className="bg-slate-100 dark:bg-black/30 px-2 py-1 rounded text-slate-800 dark:text-slate-200 font-mono">admin@loja.com</code>
-                            <span className="block text-[10px] bg-slate-100 dark:bg-black/30 rounded mt-1 w-fit mx-auto px-2">123</span>
-                        </div>
-                        <div className="text-center w-1/2 pl-2">
-                            <span className="block font-semibold text-slate-500 text-[10px] mb-1">CLIENTE</span>
-                            <code className="bg-slate-100 dark:bg-black/30 px-2 py-1 rounded text-slate-800 dark:text-slate-200 font-mono">joao@email.com</code>
-                            <span className="block text-[10px] bg-slate-100 dark:bg-black/30 rounded mt-1 w-fit mx-auto px-2">123</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 {/* Back to Home */}
                 <div className="text-center mt-8">
-                    <Link href="/" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">
+                    <Link href="/" className="text-sm font-bold text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-2">
                         ← Voltar para a loja
                     </Link>
                 </div>

@@ -1,12 +1,46 @@
 'use client';
 
-import { User, Smartphone, Mail, Calendar, Hash, BadgeCheck, AlertCircle, Shield } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { User, Smartphone, Mail, Calendar, Hash, BadgeCheck, Shield, UploadCloud } from 'lucide-react';
+import { uploadUserAvatar } from '@/backend/actions/user-actions';
+import { toast } from 'sonner';
 
 interface PersonalInfoProps {
     user: any;
 }
 
 export function PersonalInfo({ user }: PersonalInfoProps) {
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('O tamanho máximo é 2MB.');
+            return;
+        }
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const res = await uploadUserAvatar(formData);
+            if (res?.error) {
+                toast.error(res.error);
+            } else {
+                toast.success('Foto de perfil atualizada!');
+            }
+        } catch (error) {
+            toast.error('Erro ao enviar imagem.');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="glass p-8 border border-white/20">
@@ -22,11 +56,33 @@ export function PersonalInfo({ user }: PersonalInfoProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Foto de Perfil */}
-                    <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5">
-                        <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-4xl shadow-xl mb-4 relative group cursor-pointer overflow-hidden">
-                            {user.name?.charAt(0) || 'U'}
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-xs font-medium">Alterar</span>
+                    <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5 relative">
+                        <input 
+                            type="file" 
+                            accept="image/png, image/jpeg, image/jpg" 
+                            className="hidden" 
+                            ref={fileInputRef} 
+                            onChange={handleFileChange} 
+                        />
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-32 h-32 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-4xl shadow-xl mb-4 relative group cursor-pointer overflow-hidden border-4 border-white dark:border-zinc-800"
+                        >
+                            {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                user.name?.charAt(0) || 'U'
+                            )}
+                            
+                            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                {isUploading ? (
+                                    <span className="text-xs font-medium animate-pulse">Enviando...</span>
+                                ) : (
+                                    <>
+                                        <UploadCloud className="w-6 h-6 mb-1" />
+                                        <span className="text-xs font-medium">Alterar</span>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <p className="text-sm text-gray-500 text-center">

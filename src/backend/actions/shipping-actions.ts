@@ -50,3 +50,96 @@ export async function deleteCarrier(id: string) {
         return { error: "Erro ao deletar transportadora" };
     }
 }
+
+export async function getUserAddresses(userId: string) {
+    if (!userId) return { addresses: [] };
+    const addresses = await prisma.address.findMany({ where: { userId } });
+    return { addresses };
+}
+
+export async function saveUserAddress(userId: string, data: any) {
+    if (!userId) return { error: "Sem usuário" };
+    const saved = await prisma.address.create({ data: { ...data, userId } });
+    return { success: true, address: saved };
+}
+
+export async function getAddressByCEP(cep: string) {
+    try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
+        const json = await res.json();
+        return { data: json };
+    } catch(e) {
+        return { error: "CEP inválido" };
+    }
+}
+
+export async function calculateCartShipping(userId: string, zipCode: string) {
+    try {
+        const { getCart } = await import("./cart-actions");
+        const cartResult = await getCart(userId);
+        
+        if (!cartResult.cart || cartResult.cart.items.length === 0) {
+            return { error: "Carrinho vazio" };
+        }
+
+        const { calculateShipping, calculateCartDimensions } = await import("@/lib/shipping");
+        
+        // Calcular dimensões consolidadas do pacote
+        const dimensions = calculateCartDimensions(cartResult.cart.items.map((item: any) => ({
+            weight: item.product.weight,
+            length: item.product.length,
+            width: item.product.width,
+            height: item.product.height,
+            quantity: item.quantity
+        })));
+
+        // Buscar CEP de origem das configurações da loja
+        const storeConfig = await prisma.storeConfig.findFirst();
+        const fromZipCode = storeConfig?.originZipCode || "01310-100";
+
+        const quotes = await calculateShipping({
+            fromZipCode,
+            toZipCode: zipCode,
+            ...dimensions
+        });
+
+        return { success: true, quotes };
+    } catch (error) {
+        console.error("Erro no cálculo de frete:", error);
+        return { error: "Falha ao calcular frete" };
+    }
+}
+
+export async function calculateProductShipping(productId: string, zipCode: string, quantity: number = 1) {
+    try {
+        const product = await prisma.product.findUnique({
+            where: { id: productId }
+        });
+
+        if (!product) return { error: "Produto não encontrado" };
+
+        const { calculateShipping, calculateCartDimensions } = await import("@/lib/shipping");
+
+        // Calcular dimensões (mesmo que seja 1 produto, usamos a lógica de pacote)
+        const dimensions = calculateCartDimensions([{
+            weight: product.weight || 500,
+            length: product.length || 20,
+            width: product.width || 15,
+            height: product.height || 10,
+            quantity
+        }]);
+
+        const storeConfig = await prisma.storeConfig.findFirst();
+        const fromZipCode = storeConfig?.originZipCode || "01310-100";
+        const quotes = await calculateShipping({
+            fromZipCode,
+            toZipCode: zipCode,
+            ...dimensions
+        });
+
+        return { success: true, quotes };
+    } catch (error) {
+        console.error("Erro no cálculo de frete do produto:", error);
+        return { error: "Falha ao calcular frete" };
+    }
+}

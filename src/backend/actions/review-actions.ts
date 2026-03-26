@@ -64,3 +64,21 @@ export async function getProductReviews(productId: string) {
         orderBy: { createdAt: 'desc' }
     });
 }
+
+export async function deleteReview(reviewId: string, userId: string) {
+    try {
+        const review = await prisma.review.findUnique({ where: { id: reviewId } });
+        if (!review) return { error: "Avaliação não encontrada" };
+        if (review.userId !== userId) return { error: "Não autorizado" };
+
+        await prisma.review.delete({ where: { id: reviewId } });
+        
+        revalidatePath(`/product/${review.productId}`);
+        revalidatePath('/orders');
+        
+        return { success: true };
+    } catch (e) {
+        console.error("Error deleting review:", e);
+        return { error: "Erro ao deletar avaliação" };
+    }
+}

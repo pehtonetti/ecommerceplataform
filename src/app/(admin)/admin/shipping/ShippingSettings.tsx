@@ -5,7 +5,7 @@ import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { Save, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { updateStoreOriginZip } from "@/backend/actions/store-config-actions";
+import { updateStoreConfig } from "@/backend/actions/store-config-actions";
 
 export function ShippingSettings({ initialZip }: { initialZip: string }) {
     const [zip, setZip] = useState(initialZip);
@@ -14,7 +14,7 @@ export function ShippingSettings({ initialZip }: { initialZip: string }) {
     const handleSave = async () => {
         setLoading(true);
         try {
-            await updateStoreOriginZip(zip);
+            await updateStoreConfig({ originZipCode: zip });
             toast.success("CEP de origem atualizado!");
         } catch {
             toast.error("Erro ao atualizar CEP");

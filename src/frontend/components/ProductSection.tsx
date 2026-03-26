@@ -28,7 +28,7 @@ export default function ProductSection({
     viewAllLink,
     icon,
 }: ProductSectionProps) {
-    const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
+    const [displayProducts, setDisplayProducts] = useState<Product[]>(products);
 
     useEffect(() => {
         setDisplayProducts(products);

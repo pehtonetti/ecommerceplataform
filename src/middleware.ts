@@ -1,7 +1,6 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { prisma } from './lib/prisma';
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -20,7 +19,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Verifica se o cookie de sessão existe
-    // Com a nova regra, este cookie é de sessão (expira ao fechar o navegador)
     const sessionToken = request.cookies.get('ecommerce_session');
 
     if (!sessionToken) {
@@ -30,37 +28,28 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
-    // Validação de Hierarquia (Admin/Editor)
+    // Validação de Hierarquia (Admin/Editor) via cookie de role 
     if (isAdminPath) {
-        try {
-            // Verificação em tempo real no banco de dados
-            const user = await prisma.user.findUnique({
-                where: { id: sessionToken.value },
-                select: { role: true }
-            });
+        const userRole = request.cookies.get('user_role')?.value;
 
-            if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
-                console.error(`Tentativa de invasão detectada: Usuário ${sessionToken.value} tentou acessar ${pathname}`);
+        // Se o cookie de role existir, fazemos a validação estrita
+        if (userRole) {
+            if (userRole !== 'admin' && userRole !== 'editor') {
+                console.error(`Acesso negado ao Admin: Role [${userRole}] insuficiente para ${pathname}`);
 
-                // Se for uma chamada de API, retorna 403 em vez de redirecionar
                 if (pathname.startsWith('/api/')) {
                     return new NextResponse(
                         JSON.stringify({ error: 'Não autorizado. Nível de acesso insuficiente.' }),
                         { status: 403, headers: { 'Content-Type': 'application/json' } }
                     );
                 }
-
-                // Para rotas de página, redireciona para home
                 return NextResponse.redirect(new URL('/', request.url));
             }
-        } catch (error) {
-            console.error('Erro crítico no middleware de segurança:', error);
-            return NextResponse.redirect(new URL('/', request.url));
         }
+        // Se o cookie de role não existir (sessão antiga), deixamos passar no middleware 
+        // e o AdminLayout (Server Component) fará a validação final no Banco de Dados
+        // e regenerará o cookie de role para as próximas requisições.
     }
-
-    // Para caminhos de cliente, apenas a existência do token (autenticação) é suficiente por enquanto
-    // pois o RootLayout e outras camadas já filtram os dados por ID.
 
     return NextResponse.next();
 }

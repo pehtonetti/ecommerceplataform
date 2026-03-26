@@ -17,13 +17,35 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!product) return { title: 'Produto não encontrado' };
 
+    const cleanDescription = product.description.replace(/<[^>]*>/g, '').slice(0, 160);
+    const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price / 100);
+
     return {
         title: product.name,
-        description: product.description.slice(0, 160),
+        description: `${product.name} por ${priceFormatted}. ${cleanDescription}`,
         openGraph: {
+            title: `${product.name} | SimplifyTech`,
+            description: cleanDescription,
+            type: "article",
+            url: `/product/${id}`,
+            images: [
+                {
+                    url: product.imageUrl,
+                    width: 1000,
+                    height: 1000,
+                    alt: product.name,
+                },
+            ],
+            siteName: "Simplify",
+        },
+        twitter: {
+            card: "summary_large_image",
             title: product.name,
-            description: product.description.slice(0, 160),
-            images: [{ url: product.imageUrl }],
+            description: cleanDescription,
+            images: [product.imageUrl],
+        },
+        alternates: {
+            canonical: `/product/${id}`,
         },
     };
 }

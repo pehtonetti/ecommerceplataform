@@ -7,8 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model address {
-  id           String   @id
+model Address {
+  id           String   @id @default(uuid())
   userId       String
   zipCode      String
   street       String
@@ -21,69 +21,84 @@ model address {
   isDefault    Boolean  @default(false)
   label        String?
   createdAt    DateTime @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders       Order[]
 
   @@index([userId], map: "Address_userId_idx")
+  @@map("address")
 }
 
-model behaviorallog {
-  id        String   @id
+model BehavioralLog {
+  id        String   @id @default(uuid())
   userId    String?
   action    String
   details   String?  @db.LongText
   ip        String?
   source    String?
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([action], map: "BehavioralLog_action_idx")
   @@index([userId], map: "BehavioralLog_userId_idx")
+  @@map("behaviorallog")
 }
 
-model carrier {
-  id              String   @id
+model Carrier {
+  id              String   @id @default(uuid())
   name            String
   code            String?
   isActive        Boolean  @default(true)
   calculateApiUrl String?
   apiKey          String?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime @updatedAt
+
+  @@map("carrier")
 }
 
-model cart {
-  id        String   @id
-  userId    String?  @unique(map: "Cart_userId_key")
-  sessionId String?  @unique(map: "Cart_sessionId_key")
-  createdAt DateTime @default(now())
-  updatedAt DateTime
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?    @unique(map: "Cart_userId_key")
+  sessionId String?    @unique(map: "Cart_sessionId_key")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([sessionId], map: "Cart_sessionId_idx")
+  @@map("cart")
 }
 
-model cartitem {
-  id               String  @id
+model CartItem {
+  id               String  @id @default(uuid())
   cartId           String
   productId        String
   quantity         Int
   selectedColor    String?
   selectedCapacity String?
+  cart             Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product          Product @relation(fields: [productId], references: [id])
 
   @@index([cartId], map: "CartItem_cartId_idx")
   @@index([productId], map: "CartItem_productId_idx")
+  @@map("cartitem")
 }
 
-model category {
-  id          String   @id
-  name        String   @unique(map: "Category_name_key")
-  slug        String   @unique(map: "Category_slug_key")
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique(map: "Category_name_key")
+  slug        String    @unique(map: "Category_slug_key")
   description String?
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("category")
 }
 
-model coupon {
-  id                String    @id
+model Coupon {
+  id                String    @id @default(uuid())
   code              String    @unique(map: "Coupon_code_key")
   description       String?
   discountType      String
@@ -96,33 +111,38 @@ model coupon {
   validUntil        DateTime?
   active            Boolean   @default(true)
   createdAt         DateTime  @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime  @updatedAt
 
   @@index([code], map: "Coupon_code_idx")
+  @@map("coupon")
 }
 
-model emailtemplate {
-  id        String   @id
+model EmailTemplate {
+  id        String   @id @default(uuid())
   name      String   @unique(map: "EmailTemplate_name_key")
   subject   String
   body      String   @db.Text
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@map("emailtemplate")
 }
 
-model fiscalconfig {
-  id              String   @id
+model FiscalConfig {
+  id              String   @id @default(uuid())
   certificatePath String?
   certificatePass String?
   environment     String   @default("homologation")
   cnpj            String?
   companyName     String?
   ie              String?
-  updatedAt       DateTime
+  updatedAt       DateTime @updatedAt
+
+  @@map("fiscalconfig")
 }
 
-model invoice {
-  id           String    @id
+model Invoice {
+  id           String    @id @default(uuid())
   orderId      String
   number       String?
   series       String?
@@ -132,108 +152,134 @@ model invoice {
   status       String    @default("draft")
   issuedAt     DateTime  @default(now())
   authorizedAt DateTime?
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([accessKey], map: "Invoice_accessKey_idx")
   @@index([orderId], map: "Invoice_orderId_idx")
+  @@map("invoice")
 }
 
-model loyaltytransaction {
-  id          String   @id
+model LoyaltyTransaction {
+  id          String   @id @default(uuid())
   userId      String
   points      Int
   type        String
   description String
   orderId     String?
   createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "LoyaltyTransaction_userId_idx")
+  @@map("loyaltytransaction")
 }
 
-model order {
-  id                  String    @id
+model Order {
+  id                  String      @id @default(uuid())
   userId              String
   addressId           String?
+  address             Address?    @relation(fields: [addressId], references: [id])
   shippingMethod      String?
   shippingCost        Int?
   shippingDays        Int?
   trackingCode        String?
   couponId            String?
-  discountAmount      Int       @default(0)
-  loyaltyPointsEarned Int       @default(0)
-  loyaltyPointsUsed   Int       @default(0)
+  discountAmount      Int         @default(0)
+  loyaltyPointsEarned Int         @default(0)
+  loyaltyPointsUsed   Int         @default(0)
   subtotal            Int
-  taxAmount           Int       @default(0)
+  taxAmount           Int         @default(0)
   total               Int
-  status              String    @default("pending")
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
+  status              String      @default("pending")
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
   pixExpiresAt        DateTime?
   pixPaidAt           DateTime?
-  pixQRCode           String?   @db.Text
+  pixQRCode           String?     @db.Text
   pixTransactionId    String?
+  items               OrderItem[]
+  invoices            Invoice[]
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([addressId], map: "Order_addressId_idx")
   @@index([couponId], map: "Order_couponId_idx")
   @@index([userId], map: "Order_userId_idx")
+  @@map("order")
 }
 
-model orderitem {
-  id        String @id
+model OrderItem {
+  id        String  @id @default(uuid())
   orderId   String
   productId String
   quantity  Int
   price     Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 
   @@index([orderId], map: "OrderItem_orderId_idx")
   @@index([productId], map: "OrderItem_productId_idx")
+  @@map("orderitem")
 }
 
-model product {
-  id          String   @id
-  name        String
-  description String   @db.Text
-  price       Int
-  currency    String   @default("BRL")
-  stock       Int
-  imageUrl    String
-  videoUrl    String?
-  category    String
-  active      Boolean  @default(true)
-  colors      String?  @db.LongText
-  capacities  String?  @db.LongText
-  weight      Int?
-  length      Int?
-  width       Int?
-  height      Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
+model Product {
+  id           String         @id @default(uuid())
+  name         String
+  description  String         @db.Text
+  price        Int
+  currency     String         @default("BRL")
+  stock        Int
+  imageUrl     String
+  videoUrl     String?
+  category     String
+  active       Boolean        @default(true)
+  colors       String?        @db.LongText
+  capacities   String?        @db.LongText
+  weight       Int?
+  length       Int?
+  width        Int?
+  height       Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  images       ProductImage[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+  wishlistItems WishlistItem[]
+  productViews ProductView[]
+  inventoryBatches InventoryBatch[]
+
+  @@map("product")
 }
 
-model productimage {
-  id        String   @id
+model ProductImage {
+  id        String   @id @default(uuid())
   productId String
   url       String
   alt       String?
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId], map: "ProductImage_productId_idx")
+  @@map("productimage")
 }
 
-model productview {
-  id        String   @id
+model ProductView {
+  id        String   @id @default(uuid())
   productId String
   userId    String?
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([createdAt], map: "ProductView_createdAt_idx")
   @@index([productId], map: "ProductView_productId_idx")
   @@index([userId], map: "ProductView_userId_idx")
+  @@map("productview")
 }
 
-model review {
-  id        String   @id
+model Review {
+  id        String   @id @default(uuid())
   productId String
   userId    String
   rating    Int
@@ -243,27 +289,32 @@ model review {
   verified  Boolean  @default(false)
   approved  Boolean  @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([productId], map: "Review_productId_idx")
   @@index([userId], map: "Review_userId_idx")
+  @@map("review")
 }
 
-model storeconfig {
-  id              String   @id
+model StoreConfig {
+  id              String   @id @default(uuid())
   storeName       String
   homeLayout      String?  @db.LongText
   originZipCode   String?
   whatsappNumber  String?
   whatsappMessage String?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime @updatedAt
   merchantCity    String?  @default("Sao Paulo")
   pixKey          String?
+
+  @@map("storeconfig")
 }
 
-model supportticket {
-  id         String   @id
+model SupportTicket {
+  id         String   @id @default(uuid())
   userId     String?
   subject    String
   message    String   @db.Text
@@ -272,32 +323,81 @@ model supportticket {
   guestEmail String?
   guestName  String?
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime @updatedAt
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "SupportTicket_userId_idx")
+  @@map("supportticket")
 }
 
-model user {
-  id            String   @id
+model User {
+  id            String   @id @default(uuid())
   name          String
   email         String   @unique(map: "User_email_key")
   document      String?
   password      String
+  avatarUrl     String?  @db.Text
   role          String   @default("customer")
   isGuest       Boolean  @default(false)
   loyaltyPoints Int      @default(0)
   locale        String?  @default("pt-BR")
   createdAt     DateTime @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime @updatedAt
+  addresses     Address[]
+  behavioralLogs BehavioralLog[]
+  cart          Cart?
+  loyaltyTransactions LoyaltyTransaction[]
+  orders        Order[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  productViews ProductView[]
+  supportTickets SupportTicket[]
+
+  @@map("user")
 }
 
-model wishlistitem {
-  id        String   @id
+model WishlistItem {
+  id        String   @id @default(uuid())
   userId    String
   productId String
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId], map: "WishlistItem_userId_productId_key")
   @@index([productId], map: "WishlistItem_productId_idx")
   @@index([userId], map: "WishlistItem_userId_idx")
+  @@map("wishlistitem")
+}
+
+model Banner {
+  id          String   @id @default(uuid())
+  title       String
+  subtitle    String?
+  imageUrl    String
+  link        String   @default("/")
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@map("banner")
+}
+
+model InventoryBatch {
+  id              String    @id @default(uuid())
+  productId       String
+  batchCode       String
+  initialQuantity Int
+  availableStock  Int
+  costPrice       Float?
+  supplierName    String?
+  expirationDate  DateTime?
+  createdAt       DateTime  @default(now())
+
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("inventorybatch")
 }

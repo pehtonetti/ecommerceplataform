@@ -31,11 +31,9 @@ export async function POST(req: Request) {
             const orderId = session.metadata?.orderId;
 
             if (orderId) {
-                // Atualizar status do pedido para "paid"
-                await prisma.order.update({
-                    where: { id: orderId },
-                    data: { status: 'paid' },
-                });
+                // Atualizar status do pedido para "paid" e disparar efeitos colaterais
+                const { updateOrderStatus } = await import('@/backend/actions/order-actions');
+                await updateOrderStatus(orderId, 'paid');
 
                 console.log(`✅ Pagamento confirmado para pedido ${orderId}`);
 
@@ -57,9 +55,22 @@ export async function POST(req: Request) {
             break;
         }
 
+        case 'checkout.session.expired':
+        case 'checkout.session.async_payment_failed': {
+            const session = event.data.object as Stripe.Checkout.Session;
+            const orderId = session.metadata?.orderId;
+            if (orderId) {
+                const { cancelOrderAndRollback } = await import('@/backend/actions/order-actions');
+                await cancelOrderAndRollback(orderId, 'Stripe Session Expired or Failed');
+            }
+            break;
+        }
+
         case 'payment_intent.payment_failed': {
             const paymentIntent = event.data.object as Stripe.PaymentIntent;
             console.error(`❌ Pagamento falhou: ${paymentIntent.id}`);
+            // Note: payment_intent might not have orderId in metadata easily unless we propagated it.
+            // But checkout.session.expired/failed covers it.
             break;
         }
 

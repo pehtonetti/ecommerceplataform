@@ -71,8 +71,7 @@ export async function fetchAddressByCEP(cep: string): Promise<ViaCEPResponse | n
 }
 
 /**
- * Calcula frete usando Melhor Envio API (Mock para desenvolvimento)
- * Em produção, substituir por integração real com Melhor Envio ou Correios
+ * Calcula frete real com Mock/Fallback
  */
 export async function calculateShipping(params: {
     fromZipCode: string;
@@ -82,59 +81,126 @@ export async function calculateShipping(params: {
     width: number;  // cm
     height: number; // cm
 }): Promise<ShippingQuote[]> {
+    const { fromZipCode, toZipCode, weight, length, width, height } = params;
 
-    // MOCK: Simulação de cálculo de frete
-    // Em produção, fazer requisição real para Melhor Envio ou API dos Correios
-
-    const { fromZipCode, toZipCode, weight } = params;
-
-    // Validar CEPs
     if (!validateCEPFormat(fromZipCode) || !validateCEPFormat(toZipCode)) {
         throw new Error('CEP inválido');
     }
 
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+        // Tentar API Real (Melhor Envio / Correios)
+        // Se houver uma API Key em process.env, poderíamos chamar uma API real aqui.
+        // Simulando a tentativa de API real:
+        if (process.env.MELHORENVIO_TOKEN) {
+             return await calculateMelhorEnvio(params);
+        }
 
-    // Calcular distância aproximada (mock baseado em diferença de CEP)
+        throw new Error("No API configured, using fallback");
+    } catch (error) {
+        console.warn("⚠️ API de frete falhou ou não configurada, usando cálculo estimado (Fallback).");
+        return calculateShippingFallback(params);
+    }
+}
+
+/**
+ * Cálculo Estimado (Fallback) baseado em distância e peso
+ */
+function calculateShippingFallback(params: {
+    fromZipCode: string;
+    toZipCode: string;
+    weight: number;
+    length: number;
+    width: number;
+    height: number;
+}): ShippingQuote[] {
+    const { fromZipCode, toZipCode, weight } = params;
+    
+    // Cálculo simplificado
     const from = parseInt(fromZipCode.replace(/\D/g, ''));
     const to = parseInt(toZipCode.replace(/\D/g, ''));
-    const distance = Math.abs(from - to) / 1000;
+    const distanceDivisor = 100000;
+    const distance = Math.max(1, Math.abs(from - to) / distanceDivisor);
 
-    // Fórmula simplificada de cálculo
-    const basePrice = 1500; // R$ 15,00 base
-    const weightFactor = Math.ceil(weight / 1000) * 500; // R$ 5,00 por kg
-    const distanceFactor = Math.ceil(distance / 100) * 300; // R$ 3,00 por 100km
+    const basePrice = 1200; // R$ 12,00
+    const weightFactor = (weight / 1000) * 400; // R$ 4,00 por kg
+    const distanceFactor = distance * 200;
 
-    const pacPrice = basePrice + weightFactor + distanceFactor;
-    const sedexPrice = Math.ceil(pacPrice * 1.5); // SEDEX 50% mais caro
-    const expressPrice = Math.ceil(pacPrice * 2); // Express 100% mais caro
-
-    const baseDays = Math.ceil(distance / 200) + 3; // 3 dias base + distância
+    const pacPrice = Math.round(basePrice + weightFactor + distanceFactor);
+    const sedexPrice = Math.round(pacPrice * 1.6);
+    const days = Math.min(15, Math.max(2, Math.round(distance / 2) + 2));
 
     return [
         {
-            service: 'PAC',
-            serviceName: 'PAC - Correios',
+            service: 'pac',
+            serviceName: 'PAC (Estimado)',
             price: pacPrice,
-            deliveryDays: baseDays + 5,
+            deliveryDays: days + 5,
             company: 'Correios'
         },
         {
-            service: 'SEDEX',
-            serviceName: 'SEDEX - Correios',
+            service: 'sedex',
+            serviceName: 'SEDEX (Estimado)',
             price: sedexPrice,
-            deliveryDays: baseDays + 2,
+            deliveryDays: days,
             company: 'Correios'
-        },
-        {
-            service: 'EXPRESS',
-            serviceName: 'Entrega Expressa',
-            price: expressPrice,
-            deliveryDays: baseDays,
-            company: 'Loggi'
         }
     ];
+}
+
+/**
+ * Integração Real com Melhor Envio (Cotação)
+ */
+async function calculateMelhorEnvio(params: {
+    fromZipCode: string;
+    toZipCode: string;
+    weight: number; // gramas
+    length: number;
+    width: number;
+    height: number;
+}): Promise<ShippingQuote[]> {
+    const isSandbox = process.env.NEXT_PUBLIC_MELHORENVIO_SANDBOX === 'true';
+    const baseUrl = isSandbox 
+        ? 'https://sandbox.melhorenvio.com.br' 
+        : 'https://www.melhorenvio.com.br';
+
+    const response = await fetch(`${baseUrl}/api/v2/me/shipment/calculate`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.MELHORENVIO_TOKEN}`,
+            'User-Agent': 'EcommercePlatform/1.0.0 (pedro@example.com)'
+        },
+        body: JSON.stringify({
+            from: { postal_code: params.fromZipCode.replace(/\D/g, '') },
+            to: { postal_code: params.toZipCode.replace(/\D/g, '') },
+            package: {
+                weight: params.weight / 1000, // Melhor Envio usa KG
+                width: params.width,
+                height: params.height,
+                length: params.length
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Erro na API Melhor Envio:', errorData);
+        throw new Error('Falha na comunicação com a transportadora');
+    }
+
+    const data = await response.json();
+
+    // Filtrar apenas serviços sem erro e mapear para nosso formato
+    return data
+        .filter((service: any) => !service.error && service.price)
+        .map((service: any) => ({
+            service: service.id.toString(),
+            serviceName: service.name,
+            price: Math.round(parseFloat(service.price) * 100), // Converter para centavos
+            deliveryDays: service.delivery_time || 0,
+            company: service.company.name
+        }));
 }
 
 /**

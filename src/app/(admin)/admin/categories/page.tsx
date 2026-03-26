@@ -2,6 +2,7 @@ import { FadeIn } from "@/frontend/components/ui/Motion";
 import { ListTree } from "lucide-react";
 import { getCategories } from "@/backend/actions/category-actions";
 import { CreateCategoryButton } from "./CreateCategoryButton";
+import { CategoryActionsClient } from "./CategoryActionsClient";
 
 export default async function CategoriesPage() {
     const categories = await getCategories();
@@ -44,7 +45,10 @@ export default async function CategoriesPage() {
                                             /{cat.slug}
                                         </p>
                                     </div>
-                                    <ListTree className="w-5 h-5 text-muted-foreground" />
+                                    <div className="flex flex-col items-end gap-4">
+                                        <ListTree className="w-5 h-5 text-muted-foreground" />
+                                        <CategoryActionsClient category={cat} />
+                                    </div>
                                 </div>
                             </div>
                         ))}

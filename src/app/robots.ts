@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: ['/admin/', '/account/', '/checkout/'],
         },
-        sitemap: 'https://antigravity-store.com/sitemap.xml',
+        sitemap: 'https://simplifytech.eu/sitemap.xml',
     };
 }

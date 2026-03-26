@@ -54,55 +54,55 @@ function formatPixField(id: string, value: string): string {
  * Gera o payload PIX (BR Code) conforme especificação EMV
  */
 export function generatePixPayload(data: PixPaymentData): string {
-    // Payload Indicator (fixo)
+    // 00 - Payload Indicator (fixo)
     let payload = formatPixField('00', '01');
 
-    // Point of Initiation Method (12 = estático, 11 = dinâmico)
+    // 01 - Point of Initiation Method (12 = estático)
     payload += formatPixField('01', '12');
 
-    // Merchant Account Information (chave PIX)
+    // 26 - Merchant Account Information (Chave PIX)
     const merchantAccountInfo =
         formatPixField('00', 'br.gov.bcb.pix') +
-        formatPixField('01', data.pixKey);
+        formatPixField('01', data.pixKey.trim());
     payload += formatPixField('26', merchantAccountInfo);
 
-    // Merchant Category Code (0000 = não especificado)
+    // 52 - Merchant Category Code (fixo)
     payload += formatPixField('52', '0000');
 
-    // Transaction Currency (986 = BRL)
+    // 53 - Transaction Currency (986 = BRL)
     payload += formatPixField('53', '986');
 
-    // Transaction Amount (valor com 2 casas decimais)
+    // 54 - Transaction Amount (valor opcional em centavos)
     if (data.amount > 0) {
         const amountStr = (data.amount / 100).toFixed(2);
         payload += formatPixField('54', amountStr);
     }
 
-    // Country Code
+    // 58 - Country Code (fixo)
     payload += formatPixField('58', 'BR');
 
-    // Merchant Name
-    payload += formatPixField('59', data.merchantName.substring(0, 25));
+    // 59 - Merchant Name (Sanitizado - Maiúsculo, Sem Acentos)
+    const sanitizedName = data.merchantName
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+        .toUpperCase()
+        .replace(/[^A-Z0-9 ]/g, "") // Remove caracteres especiais
+        .substring(0, 25);
+    payload += formatPixField('59', sanitizedName);
 
-    // Merchant City
-    payload += formatPixField('60', data.merchantCity.substring(0, 15));
+    // 60 - Merchant City (Sanitizado)
+    const sanitizedCity = data.merchantCity
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .substring(0, 15);
+    payload += formatPixField('60', sanitizedCity);
 
-    // Additional Data Field Template
-    if (data.transactionId || data.description) {
-        let additionalData = '';
+    // 62 - Additional Data Field (Transaction ID)
+    // Para PIX Estático, o padrão mais comum e aceito pelo Inter é '***' ou em branco
+    // Usaremos '***' para sinalizar transação sem ID específico no formato estático
+    const additionalData = formatPixField('05', '***');
+    payload += formatPixField('62', additionalData);
 
-        if (data.transactionId) {
-            additionalData += formatPixField('05', data.transactionId.substring(0, 25));
-        }
-
-        if (data.description) {
-            additionalData += formatPixField('02', data.description.substring(0, 72));
-        }
-
-        payload += formatPixField('62', additionalData);
-    }
-
-    // CRC16 (sempre os últimos 4 caracteres)
+    // 63 - CRC16 (sempre os últimos 4 caracteres)
     payload += '6304';
     const crc = calculateCRC16(payload);
     payload += crc;

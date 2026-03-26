@@ -2,12 +2,13 @@ import Link from 'next/link';
 import {
     LayoutDashboard, Package, Settings, ShoppingBag, Users, ListTree,
     Warehouse, CreditCard, Truck, TicketPercent, Megaphone, BarChart3,
-    ShieldAlert, FileText, Headphones, TrendingUp
+    ShieldAlert, FileText, Headphones, TrendingUp, Image as ImageIcon
 } from 'lucide-react';
 import { LogoutButton } from '@/frontend/components/auth/LogoutButton';
 
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default async function AdminLayout({
     children,
@@ -18,6 +19,17 @@ export default async function AdminLayout({
 
     if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
         redirect('/');
+    }
+
+    // Auto-fix: Se estiver autenticado mas faltar o cookie de role (para o middleware), define ele agora
+    const cookieStore = await cookies();
+    if (!cookieStore.get('user_role')) {
+        cookieStore.set('user_role', user.role, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+        });
     }
     return (
         <div className="flex h-screen bg-gray-50 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300">
@@ -53,6 +65,7 @@ export default async function AdminLayout({
 
                     <p className="px-3 text-xs font-semibold text-muted-foreground mb-2 mt-6 uppercase tracking-wider">Gestão</p>
                     <NavItem href="/admin/marketing" icon={<Megaphone className="h-4 w-4" />} label="Marketing" />
+                    <NavItem href="/admin/banners" icon={<ImageIcon className="h-4 w-4" />} label="Banners (Loja)" />
                     <NavItem href="/admin/reports" icon={<BarChart3 className="h-4 w-4" />} label="Relatórios" />
                     <NavItem href="/admin/analytics" icon={<TrendingUp className="h-4 w-4" />} label="Analytics (IA)" />
                     <NavItem href="/admin/settings" icon={<Settings className="h-4 w-4" />} label="Configurações" />

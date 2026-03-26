@@ -5,12 +5,15 @@ import { RestockButton } from "./RestockButton";
 
 import { ExportInventoryButton } from "./ExportInventoryButton";
 
+import { getInventoryBatches } from "@/backend/actions/inventory-actions";
+
 export default async function InventoryPage() {
     // 1. Fetch real inventory stats
     const totalProducts = await prisma.product.count();
     const allProducts = await prisma.product.findMany({
         orderBy: { name: 'asc' }
     });
+    const recentBatches = await getInventoryBatches();
 
     const lowStockProducts = allProducts.filter(p => p.stock <= 5);
 
@@ -100,6 +103,52 @@ export default async function InventoryPage() {
                                 Nenhum produto com estoque crítico no momento.
                             </p>
                         </div>
+                    </div>
+                )}
+            </FadeIn>
+
+            {/* Nova Seção: Histórico de Lotes */}
+            <FadeIn delay={0.3} className="space-y-6">
+                <h2 className="text-xl font-bold mt-8">Histórico de Lotes (Entradas)</h2>
+                {recentBatches.length > 0 ? (
+                    <div className="rounded-md border border-border overflow-hidden">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-muted/50 font-medium">
+                                <tr>
+                                    <th className="p-4">Produto</th>
+                                    <th className="p-4">Código Lote</th>
+                                    <th className="p-4">Disponível / Inicial</th>
+                                    <th className="p-4">Custo Unt.</th>
+                                    <th className="p-4">Fornecedor</th>
+                                    <th className="p-4">Criado em</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {recentBatches.map(batch => (
+                                    <tr key={batch.id} className="bg-white dark:bg-zinc-900/50 hover:bg-muted/10">
+                                        <td className="p-4 font-medium">{batch.product.name}</td>
+                                        <td className="p-4 font-mono text-xs">{batch.batchCode}</td>
+                                        <td className="p-4">
+                                            <span className={`font-bold ${batch.availableStock === 0 ? 'text-red-500' : 'text-green-600'}`}>
+                                                {batch.availableStock}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground ml-1">/ {batch.initialQuantity}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            {batch.costPrice ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(batch.costPrice) : '--'}
+                                        </td>
+                                        <td className="p-4">{batch.supplierName || '--'}</td>
+                                        <td className="p-4 text-xs">
+                                            {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(batch.createdAt)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="glass p-6 text-center text-muted-foreground rounded-xl border border-border">
+                        <p>Nenhum lote registrado recentemente.</p>
                     </div>
                 )}
             </FadeIn>

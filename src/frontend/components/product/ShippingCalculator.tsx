@@ -3,28 +3,31 @@
 import { useState } from "react";
 import { Truck, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
+import { calculateProductShipping } from "@/backend/actions/shipping-actions";
+import { toast } from "sonner";
 
-export function ShippingCalculator() {
+export function ShippingCalculator({ productId }: { productId: string }) {
     const [cep, setCep] = useState("");
     const [loading, setLoading] = useState(false);
-    const [shippingOption, setShippingOption] = useState<{ price: string; days: number } | null>(null);
+    const [quotes, setQuotes] = useState<any[]>([]);
 
     const handleCalculate = async () => {
         if (cep.length < 8) return;
         setLoading(true);
+        setQuotes([]);
 
-        // Simulação de cálculo de frete
-        // Em produção, chamaria a API dos Correios ou Melhor Envio
-        setTimeout(() => {
-            const randomPrice = Math.floor(Math.random() * (40 - 15) + 15);
-            const randomDays = Math.floor(Math.random() * (7 - 2) + 2);
-
-            setShippingOption({
-                price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(randomPrice),
-                days: randomDays
-            });
+        try {
+            const result = await calculateProductShipping(productId, cep);
+            if (result.success && result.quotes) {
+                setQuotes(result.quotes);
+            } else {
+                toast.error(result.error || "Erro ao calcular frete");
+            }
+        } catch (error) {
+            toast.error("Falha na conexão");
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -50,18 +53,22 @@ export function ShippingCalculator() {
                 </Button>
             </div>
 
-            {shippingOption && (
-                <div className="mt-3 text-sm">
-                    <div className="flex justify-between items-center py-2 border-t border-dashed border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-gray-300">
-                        <span>Frete Normal</span>
-                        <div className="text-right">
-                            <span className="block font-bold text-gray-900 dark:text-white">{shippingOption.price}</span>
-                            <span className="text-xs text-green-600">Chegará em {shippingOption.days} dias úteis</span>
+            {quotes.length > 0 && (
+                <div className="mt-3 space-y-2">
+                    {quotes.map((quote, idx) => (
+                        <div key={idx} className="flex justify-between items-center py-2 border-t border-dashed border-gray-300 dark:border-zinc-700 text-gray-600 dark:text-gray-300">
+                            <div>
+                                <span className="block font-medium text-xs uppercase opacity-70">{quote.company}</span>
+                                <span className="text-sm font-semibold text-gray-900 dark:text-white">{quote.serviceName}</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="block font-bold text-gray-900 dark:text-white">
+                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quote.price / 100)}
+                                </span>
+                                <span className="text-xs text-green-600 font-medium">Até {quote.deliveryDays} dias</span>
+                            </div>
                         </div>
-                    </div>
-                    <a href="#" className="text-xs text-blue-600 dark:text-blue-400 underline mt-1 block">
-                        Ver mais opções de entrega
-                    </a>
+                    ))}
                 </div>
             )}
         </div>

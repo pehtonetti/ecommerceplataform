@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye, ShoppingCart, Star, Heart, ZoomIn, ArrowRightLeft } from "lucide-react";
 import { toggleWishlist } from "@/backend/actions/wishlist-actions";
 import { toast } from "sonner";
@@ -132,29 +133,20 @@ export function ProductCard({ product, userId }: ProductCardProps) {
               playsInline
             />
           ) : displayImages.length > 0 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={displayImages[activeImageIndex]}
               alt={product.name}
+              fill
+              quality={80}
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
               className={`w-full h-full object-contain transition-all duration-500 ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
-              onError={(e) => {
-                // Remove broken image from display list dynamically
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              onError={(e: any) => {
+                // Set fallback to a placeholder if image fails
                 const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                // If this was the only image, we will fall through to placeholder or video logic in next render if we updating state, 
-                // but modifying state inside onError can cause loop.
-                // Safer approach: Try to set src to next available or video placeholder
-                if (product.videoUrl) {
-                  // Force video replacement logic visually
-                  const video = document.createElement('video');
-                  video.src = product.videoUrl;
-                  video.autoplay = true;
-                  video.muted = true;
-                  video.loop = true;
-                  video.className = target.className.replace('object-contain', 'object-cover');
-                  target.parentNode?.appendChild(video);
-                  target.remove();
-                }
+                target.src = '/images/logo.png';
               }}
             />
           ) : product.videoUrl ? (

@@ -111,3 +111,38 @@ export async function deleteUser(id: string) {
 
   revalidatePath("/admin/users");
 }
+
+export async function uploadUserAvatar(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Não autenticado" };
+
+  const file = formData.get("avatar") as File | null;
+  if (!file) return { error: "Nenhum arquivo enviado" };
+
+  if (file.size > 2 * 1024 * 1024) {
+    return { error: "O tamanho máximo é 2MB" };
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = file.type;
+    
+    // Convert directly to base64 Data URI for simplicity storing in DB Text column 
+    // This avoids filesystem mounting complexities completely in the mockup logic!
+    const base64Data = `data:${mimeType};base64,${buffer.toString('base64')}`;
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { avatarUrl: base64Data },
+    });
+
+    revalidatePath("/account");
+    revalidatePath("/");
+    
+    return { success: true, avatarUrl: base64Data };
+  } catch (error) {
+    console.error("Failed to upload avatar:", error);
+    return { error: "Erro ao atualizar a foto de perfil" };
+  }
+}

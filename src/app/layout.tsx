@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/frontend/components/ThemeProvider";
 import { Toaster } from "sonner";
 import { WhatsAppButton } from "@/frontend/components/WhatsAppButton";
 import { CookieConsent } from "@/frontend/components/CookieConsent";
@@ -23,30 +22,57 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://simplifytech.eu'),
   title: {
-    default: "Simplify | Tecnologia Premium",
+    default: "Simplify | Tecnologia Premium & Inovação",
     template: "%s | Simplify"
   },
-  description: "A melhor experiência de compra em tecnologia, eletrônicos e gadgets premium com entrega rápida em todo o Brasil.",
-  keywords: ["e-commerce", "tecnologia", "gadgets", "eletrônicos", "compras online", "brasil"],
-  authors: [{ name: "Antigravity Team" }],
-  creator: "Antigravity",
+  description: "A Simplify é a sua curadoria de tecnologia premium. Descubra eletrônicos, smartphones e gadgets exclusivos com o selo de qualidade Simplify.",
+  keywords: ["tecnologia premium", "simplify tech", "eletrônicos de luxo", "gadgets exclusivos", "bauru tech", "apple style store"],
+  authors: [{ name: "Pedro Tonetti" }],
+  creator: "Simplify",
+  publisher: "Simplify Tech",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://antigravity-store.com",
-    title: "Antigravity Store | Tecnologia Premium",
-    description: "Sua loja de tecnologia premium com os melhores produtos",
+    url: "/",
+    title: "Simplify | Tecnologia Premium & Inovação",
+    description: "Sua curadoria definitiva de tecnologia premium e eletrônicos exclusivos.",
     siteName: "Simplify",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Simplify - Tecnologia Premium",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Antigravity Store | Tecnologia Premium",
-    description: "Sua loja de tecnologia premium com os melhores produtos",
+    title: "Simplify | Tecnologia Premium",
+    description: "Sua curadoria definitiva de tecnologia premium e eletrônicos exclusivos.",
+    images: ["/images/og-image.png"],
+    creator: "@simplifytech",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "verification_id", // User should replace this
   },
 };
 
@@ -70,29 +96,20 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-primary selection:text-white`}
         suppressHydrationWarning
       >
-        <div suppressHydrationWarning>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            <CartProvider initialCart={cartData?.cart}>
-              <CompareProvider>
-                {children}
-                <Toaster position="top-right" richColors />
-                <CookieConsent />
-                <AiPersuader />
-                <CompareDrawer />
-                <MobileNav />
-              </CompareProvider>
-            </CartProvider>
-          </ThemeProvider>
-          <WhatsAppButton />
-        </div>
+        <CartProvider initialCart={cartData?.cart}>
+          <CompareProvider>
+            {children}
+            <Toaster position="top-right" richColors />
+            <CookieConsent />
+            <AiPersuader />
+            <CompareDrawer />
+            <MobileNav />
+            <WhatsAppButton />
+          </CompareProvider>
+        </CartProvider>
       </body>
     </html>
   );

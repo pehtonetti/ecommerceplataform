@@ -4,14 +4,47 @@ import { FadeIn } from "@/frontend/components/ui/Motion";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { Textarea } from "@/frontend/components/ui/Textarea";
-import { Mail, Send, Megaphone, Share2, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Mail, Send, Megaphone, Share2, Loader2, Users, Search, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { sendEmailCampaign } from "@/backend/actions/marketing-actions";
+import { sendEmailCampaign, getMarketingCustomers } from "@/backend/actions/marketing-actions";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/frontend/components/ui/Dialog";
+
+interface Customer {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: Date;
+}
 
 export default function MarketingPage() {
     const [emailSubject, setEmailSubject] = useState("");
     const [loading, setLoading] = useState(false);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [loadingCustomers, setLoadingCustomers] = useState(false);
+
+    const fetchCustomers = async () => {
+        setLoadingCustomers(true);
+        try {
+            const result = await getMarketingCustomers();
+            if (result.success && result.customers) {
+                // @ts-ignore - Date conversion if needed
+                setCustomers(result.customers);
+            } else {
+                toast.error(result.error || "Erro ao carregar clientes");
+            }
+        } catch (error) {
+            toast.error("Erro na conexão");
+        } finally {
+            setLoadingCustomers(false);
+        }
+    };
 
     const handleSendTest = async () => {
         setLoading(true);
@@ -20,6 +53,24 @@ export default function MarketingPage() {
             toast.success("Email de teste enviado!");
         } catch {
             toast.error("Erro ao enviar email");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendCampaign = async () => {
+        if (!emailSubject) {
+            toast.error("Por favor, informe o assunto da campanha");
+            return;
+        }
+        setLoading(true);
+        try {
+            const result = await sendEmailCampaign(emailSubject, "Conteúdo");
+            if (result.success) {
+                toast.success(`Campanha enviada com sucesso para ${result.recipients} clientes!`);
+            }
+        } catch {
+            toast.error("Erro ao enviar campanha");
         } finally {
             setLoading(false);
         }
@@ -40,9 +91,65 @@ export default function MarketingPage() {
                 {/* Email Marketing */}
                 <FadeIn delay={0.1}>
                     <div className="glass p-6 rounded-xl border border-border h-full">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Mail className="h-5 w-5 text-blue-500" />
-                            <h2 className="text-lg font-semibold">Email Marketing (HTML)</h2>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <Mail className="h-5 w-5 text-blue-500" />
+                                <h2 className="text-lg font-semibold">Email Marketing (HTML)</h2>
+                            </div>
+                            
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="text-xs" onClick={fetchCustomers}>
+                                        <Users className="w-3 h-3 mr-1" /> Ver Lista de Clientes
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle className="flex items-center justify-between">
+                                            <span>Base de Clientes Disponível</span>
+                                            <Button variant="ghost" size="sm" onClick={fetchCustomers} disabled={loadingCustomers}>
+                                                <RefreshCw className={`w-4 h-4 ${loadingCustomers ? 'animate-spin' : ''}`} />
+                                            </Button>
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    
+                                    <div className="mt-4">
+                                        {loadingCustomers ? (
+                                            <div className="py-20 text-center text-muted-foreground">Carregando lista...</div>
+                                        ) : (
+                                            <div className="rounded-md border border-border">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-muted/50">
+                                                        <tr>
+                                                            <th className="p-3 text-left">Nome</th>
+                                                            <th className="p-3 text-left">Email</th>
+                                                            <th className="p-3 text-right text-xs">Desde</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {customers.map(c => (
+                                                            <tr key={c.id} className="border-t border-border hover:bg-muted/30">
+                                                                <td className="p-3">{c.name}</td>
+                                                                <td className="p-3 font-mono text-xs">{c.email}</td>
+                                                                <td className="p-3 text-right text-muted-foreground text-[10px]">
+                                                                    {new Date(c.createdAt).toLocaleDateString()}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                        {customers.length === 0 && (
+                                                            <tr>
+                                                                <td colSpan={3} className="py-10 text-center text-muted-foreground">
+                                                                    Nenhum cliente cadastrado.
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -66,7 +173,7 @@ export default function MarketingPage() {
                                 <Button variant="outline" onClick={handleSendTest} disabled={loading}>
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Testar Envio"}
                                 </Button>
-                                <Button disabled={loading}>
+                                <Button disabled={loading} onClick={handleSendCampaign} className="bg-blue-600 hover:bg-blue-700">
                                     <Send className="w-4 h-4 mr-2" />
                                     Enviar Campanha
                                 </Button>

@@ -15,10 +15,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'm.media-amazon.com' },
+      { protocol: 'https', hostname: 'http2.mlstatic.com' }, // Mercado Livre
+      { protocol: 'https', hostname: 'images.samsung.com' },
+      { protocol: 'https', hostname: 'www.apple.com' },
     ],
   },
 };

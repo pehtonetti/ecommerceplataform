@@ -118,7 +118,7 @@ export function AdminOrderActions({ orderId, invoices, orderStatus }: AdminOrder
                                 setIsLoading(false);
                             }}
                         >
-                            Marcar Pago
+                            Confirmar Pagamento
                         </Button>
                         <Button
                             variant="outline"
@@ -127,23 +127,72 @@ export function AdminOrderActions({ orderId, invoices, orderStatus }: AdminOrder
                             onClick={async () => {
                                 setIsLoading(true);
                                 const { updateOrderStatus } = await import('@/backend/actions/order-actions');
-                                await updateOrderStatus(orderId, 'shipped');
-                                toast.success('Pedido marcado como ENVIADO');
+                                await updateOrderStatus(orderId, 'processing');
+                                toast.success('Pedido marcado como EM PROCESSAMENTO');
                                 setIsLoading(false);
                             }}
                         >
-                            Marcar Enviado
+                            Processar
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="col-span-2 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            disabled={['cancelled', 'delivered'].includes(orderStatus) || isLoading}
+                            disabled={!['paid', 'processing'].includes(orderStatus) || isLoading}
+                            onClick={async () => {
+                                const code = prompt("Digite o código de rastreamento:", "");
+                                if (code === null) return;
+                                
+                                setIsLoading(true);
+                                const { updateOrderStatus } = await import('@/backend/actions/order-actions');
+                                await updateOrderStatus(orderId, 'shipped', code);
+                                toast.success('Pedido marcado como ENVIADO');
+                                setIsLoading(false);
+                            }}
+                        >
+                            Enviar / Rastreio
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={orderStatus !== 'shipped' || isLoading}
                             onClick={async () => {
                                 setIsLoading(true);
                                 const { updateOrderStatus } = await import('@/backend/actions/order-actions');
+                                await updateOrderStatus(orderId, 'delivered');
+                                toast.success('Pedido marcado como ENTREGUE');
+                                setIsLoading(false);
+                            }}
+                        >
+                            Entregue
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!['paid', 'shipped', 'delivered'].includes(orderStatus) || isLoading}
+                            onClick={async () => {
+                                if (!confirm("Deseja realmente reembolsar este pedido?")) return;
+                                
+                                setIsLoading(true);
+                                const { updateOrderStatus } = await import('@/backend/actions/order-actions');
+                                await updateOrderStatus(orderId, 'refunded');
+                                toast.success('Pedido marcado como REEMBOLSADO');
+                                setIsLoading(false);
+                            }}
+                        >
+                            Reembolsar
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/10 dark:text-red-400"
+                            disabled={['cancelled', 'delivered', 'refunded'].includes(orderStatus) || isLoading}
+                            onClick={async () => {
+                                if (!confirm("Confirmar cancelamento do pedido? Isso fará rollback de estoque e pontos.")) return;
+                                
+                                setIsLoading(true);
+                                const { updateOrderStatus } = await import('@/backend/actions/order-actions');
                                 await updateOrderStatus(orderId, 'cancelled');
-                                toast.success('Pedido CANCELADO');
+                                toast.success('Pedido CANCELADO e estoque restaurado');
                                 setIsLoading(false);
                             }}
                         >

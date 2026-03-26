@@ -40,7 +40,7 @@ export function AccountDashboard({ user, orders }: AccountDashboardProps) {
         { id: 'payments', label: 'Pagamentos', icon: CreditCard, category: 'Financeiro' },
         { id: 'orders', label: 'Histórico de Pedidos', icon: Package, category: 'Atividade' },
         { id: 'wishlist', label: 'Lista de Desejos', icon: Heart, category: 'Atividade' },
-        { id: 'benefits', label: 'Cupons e Benefícios', icon: Gift, category: 'Atividade' },
+        // { id: 'benefits', label: 'Cupons e Benefícios', icon: Gift, category: 'Atividade' },
         { id: 'support', label: 'Suporte e Atividades', icon: MessageCircle, category: 'Atividade' },
         { id: 'cart', label: 'Carrinho & Navegação', icon: ShoppingCart, category: 'Atividade' },
         { id: 'privacy', label: 'Privacidade & LGPD', icon: Lock, category: 'Legal' },

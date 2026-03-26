@@ -24,6 +24,19 @@
 .DS_Store
 *.pem
 
+# logs and debug
+*.log
+*_log.txt
+tsc_errors.txt
+banners_output*.txt
+check-*.ts
+debug-*.ts
+prisma/check_*.ts
+prisma/debug_*.ts
+prisma/fix_*.ts
+prisma/set_*.ts
+update-images.ts
+
 # debug
 npm-debug.log*
 yarn-debug.log*

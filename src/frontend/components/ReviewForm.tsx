@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createReview } from '@/backend/actions/review-actions';
+import { submitReview } from '@/backend/actions/review-actions';
 import { StarRating } from './StarRating';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -32,9 +32,8 @@ export function ReviewForm({ productId, userId, onSuccess }: ReviewFormProps) {
         e.preventDefault();
         setIsSubmitting(true);
 
-        const result = await createReview({
+        const result = await submitReview({
             productId,
-            userId,
             rating,
             title: title || undefined,
             comment

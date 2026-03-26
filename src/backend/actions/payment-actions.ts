@@ -196,10 +196,10 @@ export async function confirmPixPayment(orderId: string, txId?: string) {
 
         // Envia email de confirmação (se configurado)
         try {
-            const { sendOrderConfirmationEmail } = await import('@/lib/email');
-            await sendOrderConfirmationEmail(order.user.email, {
-                orderId: order.id,
-                customerName: order.user.name || 'Cliente',
+            const { sendOrderConfirmation } = await import('@/lib/email');
+            await sendOrderConfirmation({
+                to: order.user.email,
+                orderNumber: order.id,
                 total: order.total,
                 items: order.items.map(item => ({
                     name: item.product?.name || 'Produto',

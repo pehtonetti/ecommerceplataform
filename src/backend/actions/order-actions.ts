@@ -58,22 +58,24 @@ export async function createOrder(data: CheckoutData) {
             return sum + (item.product.price * item.quantity);
         }, 0);
 
-        // 5. Buscar custo de frete (mock - em produção, recalcular)
+        // 5. Buscar custo de frete real (recalcular no servidor para evitar fraude)
+        const { calculateCartDimensions } = await import("@/lib/shipping");
+        
+        const dimensions = calculateCartDimensions(cart.items.map((item: any) => ({
+            weight: item.product.weight,
+            length: item.product.length,
+            width: item.product.width,
+            height: item.product.height,
+            quantity: item.quantity
+        })));
+
         const storeConfig = await prisma.storeConfig.findFirst();
         const originZipCode = storeConfig?.originZipCode || '01310-100';
-
-        // Calcular dimensões do carrinho
-        const totalWeight = cart.items.reduce((sum, item) =>
-            sum + ((item.product.weight || 500) * item.quantity), 0
-        );
 
         const quotes = await calculateShipping({
             fromZipCode: originZipCode,
             toZipCode: address.zipCode,
-            weight: totalWeight,
-            length: 20,
-            width: 15,
-            height: 10
+            ...dimensions
         });
 
         const selectedShipping = quotes.find(q => q.service === data.shippingMethod);
@@ -148,88 +150,109 @@ export async function createOrder(data: CheckoutData) {
         // 9. Calcular pontos ganhos (1 ponto por R$ 1,00)
         const loyaltyPointsEarned = calculatePointsEarned(total);
 
-        // 10. Criar pedido
-        const order = await prisma.order.create({
-            data: {
-                userId: data.userId,
-                addressId: data.addressId,
-                shippingMethod: data.shippingMethod,
-                shippingCost: shippingCost,
-                shippingDays: selectedShipping.deliveryDays,
-                couponId: couponId,
-                discountAmount: totalDiscount,
-                loyaltyPointsEarned: loyaltyPointsEarned,
-                loyaltyPointsUsed: loyaltyPointsUsed,
-                subtotal: subtotal,
-                total: total,
-                status: 'pending',
-                items: {
-                    create: cart.items.map(item => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.product.price
-                    }))
-                }
-            },
-            include: {
-                items: {
-                    include: {
-                        product: true
-                    }
-                },
-                address: true,
-                user: {
-                    select: {
-                        name: true,
-                        email: true
-                    }
+        // 10. Executar tudo em um bloco transacional atômico
+        const order = await prisma.$transaction(async (tx) => {
+            // A. Decremento atômico de estoque com lock (Evita overselling se 2 pessoas comprarem junto)
+            for (const item of cart.items) {
+                const updated = await tx.product.updateMany({
+                    where: { 
+                        id: item.productId,
+                        stock: { gte: item.quantity }
+                    },
+                    data: { stock: { decrement: item.quantity } }
+                });
+
+                if (updated.count === 0) {
+                    throw new Error(`O produto "${item.product.name}" esgotou enquanto você finalizava a compra.`);
                 }
             }
-        });
 
-        // 11. Deduzir estoque (reserva temporária)
-        for (const item of cart.items) {
-            await prisma.product.update({
-                where: { id: item.productId },
+            // B. Criar o pedido
+            const newOrder = await tx.order.create({
                 data: {
-                    stock: {
-                        decrement: item.quantity
+                    userId: data.userId,
+                    addressId: data.addressId,
+                    shippingMethod: data.shippingMethod,
+                    shippingCost: shippingCost,
+                    shippingDays: selectedShipping.deliveryDays,
+                    couponId: couponId,
+                    discountAmount: totalDiscount,
+                    loyaltyPointsEarned: loyaltyPointsEarned,
+                    loyaltyPointsUsed: loyaltyPointsUsed,
+                    subtotal: subtotal,
+                    total: total,
+                    status: 'pending',
+                    items: {
+                        create: cart.items.map(item => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: item.product.price
+                        }))
+                    }
+                },
+                include: {
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    },
+                    address: true,
+                    user: {
+                        select: {
+                            name: true,
+                            email: true
+                        }
                     }
                 }
             });
-        }
 
-        // 12. Processar pontos de fidelidade (gasto e ganho)
-        if (loyaltyPointsUsed > 0) {
-            const { spendLoyaltyPoints } = await import('./loyalty-actions');
-            await spendLoyaltyPoints(
-                data.userId,
-                loyaltyPointsUsed,
-                `Resgate em pedido #${order.id.slice(0, 8)}`,
-                order.id
-            );
-        }
+            // C. Atualizar Fidelidade (Gasto e Ganho)
+            if (loyaltyPointsUsed > 0) {
+                await tx.user.update({
+                    where: { id: data.userId },
+                    data: { loyaltyPoints: { decrement: loyaltyPointsUsed } }
+                });
+                await tx.loyaltyTransaction.create({
+                    data: {
+                        userId: data.userId,
+                        points: -loyaltyPointsUsed,
+                        type: 'redeem',
+                        description: `Resgate em pedido #${newOrder.id.slice(0, 8)}`,
+                        orderId: newOrder.id
+                    }
+                });
+            }
 
-        if (loyaltyPointsEarned > 0) {
-            const { addLoyaltyPoints } = await import('./loyalty-actions');
-            await addLoyaltyPoints(
-                data.userId,
-                loyaltyPointsEarned,
-                'earned',
-                `Compra no pedido #${order.id.slice(0, 8)}`,
-                order.id
-            );
-        }
+            if (loyaltyPointsEarned > 0) {
+                await tx.user.update({
+                    where: { id: data.userId },
+                    data: { loyaltyPoints: { increment: loyaltyPointsEarned } }
+                });
+                await tx.loyaltyTransaction.create({
+                    data: {
+                        userId: data.userId,
+                        points: loyaltyPointsEarned,
+                        type: 'earned',
+                        description: `Compra no pedido #${newOrder.id.slice(0, 8)}`,
+                        orderId: newOrder.id
+                    }
+                });
+            }
 
-        // 13. Incrementar uso do cupom
-        if (couponId) {
-            const { incrementCouponUsage } = await import('./coupon-actions');
-            await incrementCouponUsage(couponId);
-        }
+            // D. Incrementar cupom
+            if (couponId) {
+                await tx.coupon.update({
+                    where: { id: couponId },
+                    data: { usesCount: { increment: 1 } }
+                });
+            }
 
-        // 14. Limpar carrinho
-        await prisma.cartItem.deleteMany({
-            where: { cartId: cart.id }
+            // E. Limpar carrinho
+            await tx.cartItem.deleteMany({
+                where: { cartId: cart.id }
+            });
+
+            return newOrder;
         });
 
         // 15. Enviar e-mail de confirmação
@@ -328,20 +351,148 @@ export async function getUserOrders(userId: string) {
 }
 
 /**
- * Atualiza status do pedido (Admin)
+ * Atualiza status do pedido (Admin) com efeitos colaterais
  */
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: string, trackingCode?: string) {
     try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { user: true, items: { include: { product: true } } }
+        });
+
+        if (!order) return { error: 'Pedido não encontrado' };
+
+        // 1. Lógica de Rollback se for cancelamento
+        if (status === 'cancelled' && order.status !== 'cancelled') {
+            await cancelOrderAndRollback(orderId, 'Cancelado pelo administrador');
+            return { success: true };
+        }
+
+        // 2. Atualizar o status principal
         await prisma.order.update({
             where: { id: orderId },
-            data: { status }
+            data: { 
+                status,
+                ...(trackingCode ? { trackingCode } : {})
+            }
         });
+
+        // 3. Efeitos Colaterais (Notificações)
+        const { sendShippingNotification, sendEmail } = await import('@/lib/email');
+
+        if (status === 'shipped') {
+            await sendShippingNotification({
+                to: order.user.email,
+                orderNumber: order.id.slice(0, 8).toUpperCase(),
+                trackingCode: trackingCode || order.trackingCode || 'N/A',
+                carrier: order.shippingMethod || 'Transportadora'
+            });
+        }
+
+        if (status === 'paid' && order.status === 'pending') {
+            // Notificar que pagamento foi recebido
+            await sendEmail({
+                to: order.user.email,
+                subject: `Pagamento Confirmado - Pedido #${order.id.slice(0, 8).toUpperCase()}`,
+                html: `<p>Olá ${order.user.name}, seu pagamento foi confirmado! Seu pedido já está sendo preparado para envio.</p>`
+            });
+        }
+
+        if (status === 'delivered') {
+             await sendEmail({
+                to: order.user.email,
+                subject: `Pedido Entregue! - Pedido #${order.id.slice(0, 8).toUpperCase()}`,
+                html: `<p>Olá ${order.user.name}, seu pedido foi entregue. Esperamos que goste dos produtos!</p>`
+            });
+        }
 
         revalidatePath(`/admin/orders/${orderId}`);
         revalidatePath('/admin/orders');
+        revalidatePath('/orders');
+        
         return { success: true };
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
         return { error: 'Erro ao atualizar status' };
+    }
+}
+
+/**
+ * Realiza rollback de um pedido não pago (Expirado ou Falhado via Webhook)
+ */
+export async function cancelOrderAndRollback(orderId: string, reason: string) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { items: true }
+        });
+
+        // Somente pode cancelar e fazer rollback se o pedido estiver pendente ou falhado
+        if (!order || (order.status !== 'pending' && order.status !== 'awaiting_payment')) {
+            return { error: 'Pedido já processado ou inexistente' };
+        }
+
+        // 1. Rollback de Estoque
+        for (const item of order.items) {
+            await prisma.product.update({
+                where: { id: item.productId },
+                data: { stock: { increment: item.quantity } }
+            });
+        }
+
+        // 2. Rollback de Cupom
+        if (order.couponId) {
+            await prisma.coupon.update({
+                where: { id: order.couponId },
+                data: { usesCount: { decrement: 1 } }
+            });
+        }
+
+        // 3. Rollback de Pontos Gastos (Devolve pro usuário)
+        if (order.loyaltyPointsUsed > 0) {
+            await prisma.user.update({
+                where: { id: order.userId },
+                data: { loyaltyPoints: { increment: order.loyaltyPointsUsed } }
+            });
+            // Cria transação de estorno
+            await prisma.loyaltyTransaction.create({
+                data: {
+                    userId: order.userId,
+                    points: order.loyaltyPointsUsed,
+                    type: 'refund',
+                    description: `Estorno de pontos do pedido falhado/cancelado #${order.id.slice(0, 8)}`,
+                    orderId: order.id
+                }
+            });
+        }
+
+        // 4. Rollback de Pontos Ganhos (Remove os pontos que ele iria ganhar)
+        if (order.loyaltyPointsEarned > 0) {
+            await prisma.user.update({
+                where: { id: order.userId },
+                data: { loyaltyPoints: { decrement: order.loyaltyPointsEarned } }
+            });
+            await prisma.loyaltyTransaction.create({
+                data: {
+                    userId: order.userId,
+                    points: -order.loyaltyPointsEarned,
+                    type: 'revoked',
+                    description: `Cancelamento de pontos ganhos no pedido #${order.id.slice(0, 8)}`,
+                    orderId: order.id
+                }
+            });
+        }
+
+        // 5. Marca pedido como cancelado
+        await prisma.order.update({
+            where: { id: orderId },
+            data: { status: 'cancelled' }
+        });
+
+        console.log(`✅ Rollback concluído para pedido ${orderId}: ${reason}`);
+        return { success: true };
+    } catch (error) {
+        console.error(`❌ Erro no rollback do pedido ${orderId}:`, error);
+        return { error: 'Falha no rollback' };
     }
 }

@@ -6,6 +6,7 @@ import { Package, MapPin, Truck, DollarSign, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderActions } from "@/frontend/components/admin/AdminOrderActions";
+import { ORDER_STATUSES, OrderStatus } from "@/lib/order-status";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -22,21 +23,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
     const { order } = result;
 
-    const statusColors = {
-        pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        paid: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        shipped: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-        delivered: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-        cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-
-    const statusLabels = {
-        pending: 'Aguardando Pagamento',
-        paid: 'Pago',
-        shipped: 'Enviado',
-        delivered: 'Entregue',
-        cancelled: 'Cancelado',
-    };
+    // Statuses handled via ORDER_STATUSES constant
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black font-sans flex flex-col">
@@ -76,8 +63,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                                         <Package className="w-5 h-5 text-primary" />
                                         Status do Pedido
                                     </h2>
-                                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${statusColors[order.status as keyof typeof statusColors]}`}>
-                                        {statusLabels[order.status as keyof typeof statusLabels]}
+                                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${ORDER_STATUSES[order.status as OrderStatus]?.color || 'bg-gray-100'}`}>
+                                        {ORDER_STATUSES[order.status as OrderStatus]?.label || order.status}
                                     </span>
                                 </div>
 

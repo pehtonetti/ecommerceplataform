@@ -27,7 +27,7 @@ export function PixPayment({ orderId, amount }: PixPaymentProps) {
     const [error, setError] = useState<string>("");
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
     const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid" | "expired">("pending");
-    const pollingInterval = useRef<NodeJS.Timeout>();
+    const pollingInterval = useRef<NodeJS.Timeout | undefined>(undefined);
 
     // Gera o QR Code PIX ao montar o componente
     useEffect(() => {
@@ -181,14 +181,14 @@ export function PixPayment({ orderId, amount }: PixPaymentProps) {
                         key="paid"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center p-12 space-y-4 bg-green-50 dark:bg-green-950/20 rounded-2xl border-2 border-green-500"
+                        className="flex flex-col items-center justify-center p-12 space-y-4 bg-green-50 rounded-[2rem] border border-green-100"
                     >
-                        <CheckCircle2 className="w-20 h-20 text-green-600 dark:text-green-400" />
-                        <h2 className="text-2xl font-bold text-green-700 dark:text-green-300">
+                        <CheckCircle2 className="w-20 h-20 text-green-500" />
+                        <h2 className="text-2xl font-bold text-green-900">
                             Pagamento Confirmado!
                         </h2>
-                        <p className="text-green-600 dark:text-green-400">
-                            Redirecionando...
+                        <p className="text-green-600 font-medium text-sm">
+                            Redirecionando para seu pedido...
                         </p>
                     </motion.div>
                 ) : paymentStatus === "expired" ? (
@@ -196,16 +196,16 @@ export function PixPayment({ orderId, amount }: PixPaymentProps) {
                         key="expired"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center p-12 space-y-4 bg-red-50 dark:bg-red-950/20 rounded-2xl border-2 border-red-500"
+                        className="flex flex-col items-center justify-center p-12 space-y-4 bg-red-50 rounded-[2rem] border border-red-100"
                     >
-                        <AlertCircle className="w-20 h-20 text-red-600 dark:text-red-400" />
-                        <h2 className="text-2xl font-bold text-red-700 dark:text-red-300">
+                        <AlertCircle className="w-20 h-20 text-red-500" />
+                        <h2 className="text-2xl font-bold text-red-900">
                             QR Code Expirado
                         </h2>
-                        <p className="text-red-600 dark:text-red-400 text-center">
-                            O tempo para pagamento expirou. Por favor, gere um novo QR Code.
+                        <p className="text-red-500 text-center font-medium text-sm">
+                            O tempo para pagamento expirou. Gere um novo para continuar.
                         </p>
-                        <Button onClick={() => window.location.reload()} className="mt-4">
+                        <Button onClick={() => window.location.reload()} className="mt-4 bg-red-600 hover:bg-red-700 text-white rounded-xl">
                             Gerar Novo QR Code
                         </Button>
                     </motion.div>
@@ -214,104 +214,117 @@ export function PixPayment({ orderId, amount }: PixPaymentProps) {
                         key="pending"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
+                        className="space-y-8"
                     >
                         {/* Header */}
-                        <div className="text-center space-y-2">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                                <QrCode className="w-5 h-5 text-primary" />
-                                <span className="text-sm font-bold text-primary">Pagamento via PIX</span>
+                        <div className="text-center space-y-3">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full border border-indigo-100">
+                                <QrCode className="w-4 h-4 text-indigo-600" />
+                                <span className="text-[10px] uppercase tracking-[0.2em] font-black text-indigo-600">Pagamento via PIX</span>
                             </div>
-                            <h1 className="text-3xl font-black">Escaneie o QR Code</h1>
-                            <p className="text-lg font-bold text-primary">{formatAmount(amount)}</p>
+                            <h1 className="text-3xl font-black text-zinc-900">Escaneie o QR Code</h1>
+                            <p className="text-2xl font-black text-zinc-900">{formatAmount(amount)}</p>
                             {pixData?.description && (
-                                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                                <p className="text-xs text-zinc-400 max-w-xs mx-auto font-medium">
                                     {pixData.description}
                                 </p>
                             )}
                         </div>
 
-                        {/* Timer */}
-                        <div className="flex items-center justify-center gap-2 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-200 dark:border-orange-800">
-                            <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                            <span className="font-mono text-lg font-bold text-orange-700 dark:text-orange-300">
-                                {formatTime(timeRemaining)}
-                            </span>
-                            <span className="text-sm text-orange-600 dark:text-orange-400">
-                                para pagar
-                            </span>
-                        </div>
-
-                        {/* QR Code */}
-                        <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 border-2 border-border shadow-xl">
-                            <div className="flex flex-col items-center space-y-6">
-                                {qrCodeImage && (
+                        {/* QR Code Container */}
+                        <div className="bg-white rounded-[2rem] p-4 md:p-10 border border-zinc-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                            <div className="flex flex-col items-center space-y-10">
+                                {qrCodeImage ? (
                                     <motion.div
                                         initial={{ scale: 0.8, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="bg-white p-4 rounded-xl shadow-lg"
+                                        transition={{ delay: 0.2, type: "spring", damping: 15 }}
+                                        className="bg-white p-6 rounded-[1.8rem] shadow-sm border border-zinc-50"
                                     >
                                         <img
                                             src={qrCodeImage}
                                             alt="QR Code PIX"
-                                            className="w-[300px] h-[300px]"
+                                            className="w-[260px] h-[260px]"
                                         />
                                     </motion.div>
+                                ) : (
+                                    <div className="w-[260px] h-[260px] bg-zinc-50 rounded-[1.8rem] animate-pulse flex items-center justify-center">
+                                        <RefreshCw className="w-8 h-8 text-zinc-200 animate-spin" />
+                                    </div>
                                 )}
 
-                                <div className="w-full space-y-3">
-                                    <p className="text-sm text-center text-muted-foreground font-medium">
-                                        Ou copie o código PIX:
+                                <div className="w-full space-y-4">
+                                    <p className="text-[10px] uppercase tracking-widest text-center text-zinc-400 font-black">
+                                        Copia e Cola
                                     </p>
                                     <div className="flex gap-2">
-                                        <div className="flex-1 bg-gray-50 dark:bg-zinc-950 border border-border rounded-lg p-3 overflow-hidden">
-                                            <p className="text-xs font-mono text-muted-foreground truncate">
+                                        <div className="flex-1 bg-zinc-50 border border-zinc-100 rounded-2xl p-4 overflow-hidden group">
+                                            <p className="text-[10px] font-mono text-zinc-400 truncate">
                                                 {pixData?.qrCode}
                                             </p>
                                         </div>
-                                        <Button
+                                        <button
                                             onClick={handleCopyCode}
-                                            variant="outline"
-                                            className="gap-2"
+                                            className="px-6 h-14 bg-zinc-900 text-white rounded-2xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-zinc-100"
                                         >
                                             <Copy className="w-4 h-4" />
                                             Copiar
-                                        </Button>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Instruções */}
-                        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-                            <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-3">
-                                Como pagar com PIX:
-                            </h3>
-                            <ol className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                                <li className="flex gap-2">
-                                    <span className="font-bold">1.</span>
-                                    <span>Abra o app do seu banco</span>
-                                </li>
-                                <li className="flex gap-2">
-                                    <span className="font-bold">2.</span>
-                                    <span>Escolha pagar com PIX</span>
-                                </li>
-                                <li className="flex gap-2">
-                                    <span className="font-bold">3.</span>
-                                    <span>Escaneie o QR Code ou cole o código</span>
-                                </li>
-                                <li className="flex gap-2">
-                                    <span className="font-bold">4.</span>
-                                    <span>Confirme o pagamento</span>
-                                </li>
-                            </ol>
+                        {/* Instructions & Timer Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100">
+                                <h3 className="text-[10px] uppercase tracking-widest font-black text-zinc-400 mb-4">
+                                    Passo a Passo
+                                </h3>
+                                <ul className="space-y-3 text-xs text-zinc-600 font-bold">
+                                    <li className="flex gap-3">
+                                        <span className="text-zinc-300">01</span>
+                                        <span>Abra o app do seu banco</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="text-zinc-300">02</span>
+                                        <span>Escolha 'Pagar via PIX'</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="text-zinc-300">03</span>
+                                        <span>Confirme o valor e finalize</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-amber-50/50 rounded-2xl p-6 border border-amber-100 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-[10px] uppercase tracking-widest font-black text-amber-600/60">
+                                        Expira em
+                                    </h3>
+                                    <Clock className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="mt-4 flex items-baseline gap-2">
+                                    <span className="font-mono text-3xl font-black text-amber-600">
+                                        {formatTime(timeRemaining)}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-amber-600/60 uppercase">minutos</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Status */}
-                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            <span>Aguardando confirmação do pagamento...</span>
+                        {/* Connection Status */}
+                        <div className="flex flex-col items-center gap-3 py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-ping absolute inset-0"></div>
+                                    <div className="w-2 h-2 bg-indigo-600 rounded-full relative"></div>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                                    Conexão Segura Ativa
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-zinc-300 font-medium">Aguardando confirmação automática do Banco Inter...</p>
                         </div>
                     </motion.div>
                 )}

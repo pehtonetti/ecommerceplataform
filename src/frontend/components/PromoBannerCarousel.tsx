@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 interface Banner {
     id: string;
-    image?: string;
+    imageUrl?: string;
     gradient?: string;
     overlayImage?: string;
     title: string;
@@ -19,21 +19,21 @@ interface Banner {
 const defaultBanners: Banner[] = [
     {
         id: '1',
-        image: '/images/banner-final-1.png',
+        imageUrl: '/images/banner-final-1.png',
         title: '',
         subtitle: '',
         link: '/search?category=notebooks',
     },
     {
         id: '2',
-        image: '/images/banner-final-2.png',
+        imageUrl: '/images/banner-final-2.png',
         title: '',
         subtitle: '',
         link: '/search?q=placa de video',
     },
     {
         id: '3',
-        image: '/images/banner-final-3.png',
+        imageUrl: '/images/banner-final-3.png',
         title: '',
         subtitle: '',
         link: '/search?q=setup',
@@ -42,12 +42,37 @@ const defaultBanners: Banner[] = [
 
 export default function PromoBannerCarousel() {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [banners] = useState<Banner[]>(defaultBanners);
+    const [banners, setBanners] = useState<Banner[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        async function fetchBanners() {
+            try {
+                const res = await fetch('/api/banners');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        setBanners(data);
+                    } else {
+                        // Fallback to minimal defaults if no banners exist
+                        setBanners(defaultBanners);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading banners:', error);
+                setBanners(defaultBanners);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchBanners();
+    }, []);
+
+    useEffect(() => {
+        if (banners.length === 0) return;
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % banners.length);
-        }, 8000); // Increased duration for readability
+        }, 8000);
 
         return () => clearInterval(timer);
     }, [banners.length]);
@@ -75,29 +100,38 @@ export default function PromoBannerCarousel() {
                         className={`min-w-full h-full relative block cursor-pointer ${banner.gradient ? banner.gradient : ''}`}
                     >
                         {/* Background Image (if defined) */}
-                        {banner.image && (
-                            <div className="absolute inset-0 bg-black/10" suppressHydrationWarning>
+                        {banner.imageUrl && (
+                            <div className="absolute inset-0 bg-zinc-100" suppressHydrationWarning>
                                 {/* 1. Blurred Background layer to fill space */}
                                 <div className="absolute inset-0 overflow-hidden" suppressHydrationWarning>
                                     <Image
-                                        src={banner.image}
+                                        src={banner.imageUrl}
                                         alt=""
                                         fill
-                                        className="object-cover blur-2xl opacity-60 scale-110"
+                                        className="object-cover blur-3xl opacity-40 scale-110"
                                         aria-hidden="true"
+                                        unoptimized={banner.imageUrl.startsWith('/')} // Local images might be optimized already or not needed
                                     />
                                 </div>
 
                                 {/* 2. Main Sharp Image (Centered and Contained) */}
-                                <div className="absolute inset-0 z-10">
+                                <div className="absolute inset-0 z-10 flex items-center justify-center">
                                     <Image
-                                        src={banner.image}
+                                        src={banner.imageUrl}
                                         alt={banner.title || 'Banner'}
                                         fill
-                                        quality={100}
-                                        priority={banner.id === '1'}
-                                        className="object-contain object-center drop-shadow-2xl"
-                                        sizes="100vw"
+                                        quality={85} // Optimized compression
+                                        priority={banners.indexOf(banner) === 0} // LCP Priority for first slide 
+                                        loading={banners.indexOf(banner) === 0 ? 'eager' : 'lazy'}
+                                        placeholder="blur"
+                                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" // Light gray placeholder
+                                        className="object-contain object-center drop-shadow-2xl transition-opacity duration-1000"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                                        onError={(e) => {
+                                            // Fallback to a local generic banner image if CDN fails
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = '/images/logo.png';
+                                        }}
                                     />
                                 </div>
 

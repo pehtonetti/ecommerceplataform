@@ -12,7 +12,7 @@ export default async function StorefrontLayout({
     return (
         <div className="min-h-screen bg-transparent flex flex-col font-sans">
             <Header user={user} />
-            <main className="flex-1">
+            <main className="flex-1 pt-[88px] md:pt-[104px]">
                 {children}
             </main>
             <Footer />

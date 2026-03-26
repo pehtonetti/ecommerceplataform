@@ -1,22 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcryptjs';
 
-const hashPassword = async (password: string) => {
-  return await hash(password, 12);
-};
-
 const prisma = new PrismaClient();
 
-
-
-
-
 async function main() {
-  console.log('🌱 Starting seed...');
+  console.log('🌱 Starting Luxury Seed...');
 
   // 1. Clean database
   console.log('🧹 Cleaning database...');
-  await prisma.productImage.deleteMany(); // New table
+  await prisma.productImage.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
@@ -27,146 +19,178 @@ async function main() {
   await prisma.productView.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
-  await prisma.carrier.deleteMany();
   await prisma.user.deleteMany();
   await prisma.storeConfig.deleteMany();
 
   // 2. Create Users
-  console.log('Creating users...');
-  const hashedPassword = await hashPassword('123');
-
+  const hashedPassword = await hash('123', 12);
   await prisma.user.createMany({
     data: [
-      { name: 'Admin User', email: 'admin@loja.com', password: hashedPassword, role: 'admin' },
-      { name: 'João Silva', email: 'joao@email.com', password: hashedPassword, role: 'customer' },
-      { name: 'Editor User', email: 'editor@loja.com', password: hashedPassword, role: 'editor' }
+      { name: 'Admin', email: 'admin@loja.com', password: hashedPassword, role: 'admin' },
+      { name: 'João Tech', email: 'joao@email.com', password: hashedPassword, role: 'customer' },
     ]
   });
 
-  // Helper to generate distinct categories and products
-  // Requisição: 3 produtos por categoria, 60 categorias = 180 produtos. 
-  // Cada produto com 2 fotos e video simples. Variants de cor e capacidade.
+  // 3. Store Config
+  await prisma.storeConfig.create({
+    data: {
+      storeName: "Simplify Luxury Tech",
+      originZipCode: "17055-270",
+    }
+  });
 
-  // Lista massiva de categorias para cobrir 60
-  const categoriesList = [
-    'Smartphones', 'Notebooks', 'Tablets', 'Monitores', 'Impressoras', 'Periféricos', 'Consoles', 'Jogos',
-    'Placas de Vídeo', 'Processadores', 'Placas Mãe', 'Memória RAM', 'Armazenamento', 'Fontes', 'Gabinetes', 'Coolers',
-    'Cadeiras Gamer', 'Mesas Gamer', 'Smartwatches', 'Smartbands', 'Fones de Ouvido', 'Caixas de Som', 'Soundbars', 'Microfones',
-    'Câmeras', 'Lentes', 'Drones', 'Acessórios de Câmera', 'TVs', 'Projetores', 'Streaming', 'Cabos',
-    'Adaptadores', 'Carregadores', 'Power Banks', 'Hubs USB', 'Rede Mesh', 'Roteadores', 'Switches', 'Repetidores',
-    'Casa Inteligente', 'Lâmpadas Smart', 'Tomadas Smart', 'Câmeras de Segurança', 'Fechaduras Digitais', 'Vídeo Porteiro', 'Assistentes Virtuais',
-    'Eletrodomésticos', 'Robôs Aspiradores', 'Ar Condicionado', 'Ventiladores', 'Umidificadores', 'Purificadores', 'Cafeteiras',
-    'Air Fryers', 'Liquidificadores', 'Batedeiras', 'Torradeiras', 'Chaleiras', 'Ferramentas'
+  const categories = [
+    { name: 'Apple', slug: 'apple', description: 'O ecossistema definitivo.' },
+    { name: 'Smartphones', slug: 'smartphones', description: 'Poder na palma da sua mão.' },
+    { name: 'Notebooks', slug: 'notebooks', description: 'Performance sem limites.' },
+    { name: 'Áudio Elite', slug: 'audio', description: 'Som em sua forma mais pura.' },
+    { name: 'Acessórios', slug: 'acessorios', description: 'Complemente sua experiência.' }
   ];
 
-  // Base de imagens genéricas mas funcionais (Unsplash) para garantir visualização
-  const BASE_IMAGES = [
-    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80',
-    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
-    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80',
-    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',
-    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
-    'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800&q=80',
-    'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80',
-    'https://images.unsplash.com/photo-1588872657578-139a62703602?w=800&q=80',
-    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80',
-    'https://images.unsplash.com/photo-1494726161322-5360d4d0eeae?w=800&q=80',
+  const products = [
+    // APPLE
+    {
+      category: 'Apple',
+      name: 'iPhone 16 Pro Max',
+      description: 'O iPhone mais poderoso de todos. Titânio aeroespacial e o novo chip A18 Pro.',
+      price: 1099900, stock: 15, weight: 221, length: 16, width: 8, height: 1,
+      imageUrl: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80',
+      colors: ['Titânio Natural', 'Titânio Negro', 'Titânio Branco'],
+      capacities: ['256GB', '512GB', '1TB']
+    },
+    {
+      category: 'Apple',
+      name: 'MacBook Pro M3 Max 16"',
+      description: 'Velocidade absurda. Bateria para o dia todo. A tela Liquid Retina XDR mais avançada.',
+      price: 3499900, stock: 5, weight: 2100, length: 36, width: 25, height: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1517336714460-4c504974f28d?w=800&q=80',
+      colors: ['Preto Espacial', 'Prateado'],
+      capacities: ['36GB RAM', '64GB RAM', '128GB RAM']
+    },
+    {
+      category: 'Apple',
+      name: 'iPad Pro M4',
+      description: 'Surpreendentemente fino. Incrivelmente poderoso. O futuro do trabalho portátil.',
+      price: 1299900, stock: 10, weight: 450, length: 28, width: 21, height: 1,
+      imageUrl: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&q=80',
+      colors: ['Prata', 'Cinza Espacial'],
+      capacities: ['256GB', '512GB', '1TB', '2TB']
+    },
+    {
+      category: 'Apple',
+      name: 'Apple Watch Ultra 2',
+      description: 'O relógio de aventura definitivo. Titânio e tela de 3000 nits.',
+      price: 899900, stock: 20, weight: 61, length: 5, width: 5, height: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1434493907317-a46b53b81882?w=800&q=80',
+      colors: ['Titânio Natural'],
+      capacities: ['GPS + Cellular']
+    },
+    {
+      category: 'Apple',
+      name: 'AirPods Max',
+      description: 'A fidelidade do áudio encontra a magia do AirPods.',
+      price: 659000, stock: 12, weight: 385, length: 20, width: 18, height: 8,
+      imageUrl: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=800&q=80',
+      colors: ['Verde', 'Rosa', 'Prata', 'Preto'],
+      capacities: ['Áudio Espacial']
+    },
+
+    // SMARTPHONES
+    {
+      category: 'Smartphones',
+      name: 'Samsung Galaxy S24 Ultra',
+      description: 'Inteligência Artificial avançada e zoom de 100x. O rei do Android.',
+      price: 899900, stock: 25, weight: 232, length: 16, width: 8, height: 1,
+      imageUrl: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800&q=80',
+      colors: ['Titanium Gray', 'Titanium Yellow', 'Titanium Violet'],
+      capacities: ['256GB', '512GB', '1TB']
+    },
+    {
+      category: 'Smartphones',
+      name: 'Google Pixel 9 Pro',
+      description: 'A melhor câmera do mundo impulsionada pelo Google AI.',
+      price: 799900, stock: 8, weight: 200, length: 16, width: 7, height: 1,
+      imageUrl: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&q=80',
+      colors: ['Obsidian', 'Porcelain', 'Hazel'],
+      capacities: ['128GB', '256GB', '512GB']
+    },
+
+    // NOTEBOOKS
+    {
+      category: 'Notebooks',
+      name: 'Dell XPS 15',
+      description: 'O equilíbrio perfeito entre potência e portabilidade com tela OLED.',
+      price: 1599900, stock: 6, weight: 1900, length: 34, width: 23, height: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1588872657578-139a62703602?w=800&q=80',
+      colors: ['Platinum Silver'],
+      capacities: ['16GB RAM', '32GB RAM']
+    },
+    {
+      category: 'Notebooks',
+      name: 'Razer Blade 16',
+      description: 'O notebook gamer definitivo com tela Mini-LED e RTX 4090.',
+      price: 2899900, stock: 3, weight: 2450, length: 35, width: 24, height: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80',
+      colors: ['Mercury White', 'Matte Black'],
+      capacities: ['32GB RAM']
+    },
+
+     // AUDIO
+     {
+      category: 'Áudio Elite',
+      name: 'Sony WH-1000XM5',
+      description: 'O melhor cancelamento de ruído do mercado com áudio Hi-Res.',
+      price: 249900, stock: 30, weight: 250, length: 22, width: 18, height: 10,
+      imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+      colors: ['Preto', 'Prata', 'Azul'],
+      capacities: ['Bluetooth 5.3']
+    },
+    {
+      category: 'Áudio Elite',
+      name: 'Bose QuietComfort Ultra',
+      description: 'Conforto lendário e som imersivo sem precedentes.',
+      price: 289900, stock: 20, weight: 250, length: 22, width: 18, height: 10,
+      imageUrl: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&q=80',
+      colors: ['Black', 'White Smoke'],
+      capacities: ['CustomTune']
+    }
   ];
 
-  const VIDEOS = [
-    'https://www.w3schools.com/html/mov_bbb.mp4',
-    'https://media.w3.org/2010/05/sintel/trailer_hd.mp4'
-  ];
+  console.log(`Creating ${categories.length} categories...`);
+  for (const cat of categories) {
+    await prisma.category.create({ data: cat });
+  }
 
-  const COLORS = ['Preto', 'Branco', 'Prata', 'Azul', 'Vermelho', 'Dourado'];
-  const CAPACITIES = ['64GB', '128GB', '256GB', '512GB', '1TB'];
-
-  console.log(`Creating ${categoriesList.length} categories...`);
-
-  for (const catName of categoriesList) {
-    await prisma.category.create({
+  console.log(`Creating ${products.length} products...`);
+  for (const p of products) {
+    const createdProduct = await prisma.product.create({
       data: {
-        name: catName,
-        slug: catName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-        description: `Os melhores produtos de ${catName} selecionados para você.`
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        stock: p.stock,
+        weight: p.weight,
+        length: p.length,
+        width: p.width,
+        height: p.height,
+        imageUrl: p.imageUrl,
+        category: p.category,
+        active: true,
+        colors: JSON.stringify(p.colors),
+        capacities: JSON.stringify(p.capacities),
       }
     });
 
-    // Criar 3 produtos por categoria
-    for (let i = 1; i <= 3; i++) {
-      // Selecionar imagens (simulando seed aleatório mas determinístico)
-      const imgIndex = (catName.length + i) % BASE_IMAGES.length;
-      const mainImage = BASE_IMAGES[imgIndex];
-      const secondaryImage = BASE_IMAGES[(imgIndex + 1) % BASE_IMAGES.length];
-      const video = VIDEOS[i % 2];
-
-      // Definir variantes variadas
-      const hasColors = Math.random() > 0.3; // 70% chance de ter cores
-      const hasCapacity = ['Smartphone', 'Notebook', 'Tablet', 'Console'].some(k => catName.includes(k));
-
-      const productColors = hasColors ? COLORS.slice(0, Math.floor(Math.random() * 3) + 2) : [];
-      const productCapacities = hasCapacity ? CAPACITIES.slice(0, Math.floor(Math.random() * 3) + 2) : [];
-
-      const price = Math.floor(Math.random() * 500000) + 5000; // Entre 50 e 5000 reais
-
-      const product = await prisma.product.create({
-        data: {
-          name: `${catName} Premium Model ${String.fromCharCode(64 + i)}`, // Ex: Smartphone Premium Model A
-          description: `Descubra a tecnologia de ponta com o ${catName} Premium. Ideal para quem busca performance e estilo. Inclui garantia extendida e suporte premium.\n\nCaracterísticas:\n- Alta durabilidade\n- Design moderno\n- Eficiência energética`,
-          price: price,
-          stock: Math.floor(Math.random() * 100) + 10,
-          imageUrl: mainImage,
-          videoUrl: video,
-          category: catName,
-          active: true,
-          colors: productColors.length > 0 ? productColors : undefined,
-          capacities: productCapacities.length > 0 ? productCapacities : undefined,
-          weight: 500, length: 20, width: 20, height: 10, // Default logistics
-        }
-      });
-
-      // Adicionar imagens extras
-      await prisma.productImage.createMany({
-        data: [
-          { productId: product.id, url: mainImage, alt: 'Main View' },
-          { productId: product.id, url: secondaryImage, alt: 'Side View' }
-        ]
-      });
-    }
+    await prisma.productImage.create({
+      data: {
+        productId: createdProduct.id,
+        url: p.imageUrl,
+        alt: p.name
+      }
+    });
   }
 
-  // Produto Específico Pedido (LG OLED)
-  console.log('Creating Specifc Requested Product...');
-  await prisma.category.upsert({
-    where: { slug: 'tvs' },
-    update: {},
-    create: { name: 'TVs', slug: 'tvs', description: 'Televisores de última geração' }
-  });
-
-  const lgOled = await prisma.product.create({
-    data: {
-      name: 'Smart TV LG OLED evo C3 55"',
-      description: 'A melhor TV OLED do mundo ficou ainda melhor. O processador α9 Gen6 AI 4K exclusividade da LG OLED evo eleva a experiência de visualização a outro nível.',
-      price: 549900, // R$ 5.499,00
-      stock: 8,
-      imageUrl: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=80', // Imagem de TV
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      category: 'TVs',
-      active: true,
-      colors: ['Preto', 'Prata'], // Exemplo de variantes
-      capacities: ['55 polegadas', '65 polegadas'], // Usando capacity como tamanho p/ exemplo
-      weight: 15000, length: 120, width: 10, height: 70
-    }
-  });
-
-  await prisma.productImage.createMany({
-    data: [
-      { productId: lgOled.id, url: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=80', alt: 'Front View' },
-      { productId: lgOled.id, url: 'https://images.unsplash.com/photo-1552975084-6e027cd345c2?w=800&q=80', alt: 'Side View' }
-    ]
-  });
-
-  console.log('✅ Seed completed with 60 categories and diverse products!');
+  console.log('✅ Luxury Seed completed!');
 }
 
 main()

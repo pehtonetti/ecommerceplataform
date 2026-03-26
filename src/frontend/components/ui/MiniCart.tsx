@@ -33,7 +33,7 @@ export function MiniCart() {
                 className="relative p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
             >
                 <ShoppingBag className="w-6 h-6" />
-                {cart?.items?.length > 0 && (
+                {mounted && cart?.items?.length > 0 && (
                     <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                         {cart.items.length}
                     </span>
