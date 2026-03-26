@@ -10,7 +10,7 @@ export default async function StorefrontLayout({
     const user = await getCurrentUser();
 
     return (
-        <div className="min-h-screen bg-transparent flex flex-col font-sans">
+        <div className="min-h-screen bg-transparent flex flex-col font-sans" suppressHydrationWarning>
             <Header user={user} />
             <main className="flex-1 pt-[88px] md:pt-[104px]">
                 {children}

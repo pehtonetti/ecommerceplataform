@@ -44,6 +44,7 @@ export default function PromoBannerCarousel() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         async function fetchBanners() {
@@ -66,6 +67,7 @@ export default function PromoBannerCarousel() {
             }
         }
         fetchBanners();
+        setIsMounted(true);
     }, []);
 
     useEffect(() => {
@@ -85,8 +87,15 @@ export default function PromoBannerCarousel() {
         setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
     };
 
+    // Don't render on server - prevents hydration mismatch from browser extensions
+    if (!isMounted) {
+        return (
+            <div className="relative w-full h-[250px] sm:h-[350px] md:h-[450px] overflow-hidden bg-zinc-100 animate-pulse" />
+        );
+    }
+
     return (
-        <div className="relative w-full h-[250px] sm:h-[350px] md:h-[450px] overflow-hidden group">
+        <div className="relative w-full h-[250px] sm:h-[350px] md:h-[450px] overflow-hidden group" suppressHydrationWarning>
             {/* Banners */}
             <div
                 className="flex transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1) h-full"

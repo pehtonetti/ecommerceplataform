@@ -6,7 +6,7 @@ import { Facebook, Instagram, Twitter, Mail, MapPin, Phone, CreditCard, ArrowRig
 
 export function Footer() {
     return (
-        <footer className="bg-white dark:bg-black border-t border-gray-200 dark:border-zinc-800 mt-20">
+        <footer className="bg-white dark:bg-black border-t border-gray-200 dark:border-zinc-800 mt-20" suppressHydrationWarning>
             <div className="bg-zinc-900 text-white py-12">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
