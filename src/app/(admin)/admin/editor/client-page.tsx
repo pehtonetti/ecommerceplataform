@@ -1,6 +1,7 @@
 import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
-import config from "@/lib/puck.config";
+import config from "@/frontend/puck.config";
+
 import { saveLayoutConfig } from "@/backend/actions/layout-actions";
 import { toast } from "sonner";
 

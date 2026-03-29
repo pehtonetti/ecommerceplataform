@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { searchProducts, getProductSuggestions, SearchFilters } from '@/backend/actions/search-actions';
 import { Search, X, SlidersHorizontal, Loader2 } from 'lucide-react';
-import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useDebounce } from '@/frontend/hooks-lib/useDebounce';
 
 interface SearchBarProps {
     onSearch?: (filters: SearchFilters) => void;
