@@ -1,4 +1,4 @@
-# Plataforma E‑Commerce — README Profissional
+# Plataforma E‑Commerce - Tudo que você precisa saber pra rodar o projeto. 
 
 🚀 **Projeto completo de plataforma de e‑commerce**, com arquitetura moderna, modular, escalável e preparada para produção, contendo API, painel administrativo e storefront.
 
