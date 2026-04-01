@@ -17,7 +17,7 @@ export function SettingsForm({ initialData }: { initialData: any }) {
         const formData = new FormData(e.currentTarget);
         
         const data = {
-            storeName: formData.get("storeName") as string,
+            name: formData.get("name") as string,
             pixKey: formData.get("pixKey") as string,
             merchantCity: formData.get("merchantCity") as string,
         };
@@ -57,8 +57,8 @@ export function SettingsForm({ initialData }: { initialData: any }) {
                     <div className="grid gap-2">
                         <label className="text-sm font-medium">Nome na Fatura / Beneficiário</label>
                         <Input
-                            name="storeName"
-                            defaultValue={initialData?.storeName || ""}
+                            name="name"
+                            defaultValue={initialData?.name || ""}
                             required
                             placeholder="LOJA TECH LTDA"
                         />

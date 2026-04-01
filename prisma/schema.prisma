@@ -27,6 +27,8 @@ model Store {
   googleAnalyticsId String?
   facebookPixelId   String?
   homeLayout      String?  @db.LongText
+  merchantCity    String?  @default("Sao Paulo")
+  whatsappMessage String?
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

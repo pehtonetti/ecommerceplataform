@@ -27,7 +27,7 @@ export interface Product {
 }
 
 export interface StoreConfig {
-    storeName: string;
+    name: string;
     primaryColor: string;
     logoUrl?: string;
     businessType: 'products' | 'services';

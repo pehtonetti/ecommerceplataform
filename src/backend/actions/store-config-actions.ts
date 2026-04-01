@@ -27,8 +27,10 @@ export async function getStoreConfig() {
 export async function updateStoreConfig(data: {
     name?: string;
     pixKey?: string;
+    merchantCity?: string;
     originZipCode?: string;
     whatsappNumber?: string;
+    whatsappMessage?: string;
     googleAnalyticsId?: string;
     facebookPixelId?: string;
 }) {
@@ -48,8 +50,10 @@ export async function updateStoreConfig(data: {
             data: {
                 name: data.name || "Minha Loja",
                 pixKey: data.pixKey,
+                merchantCity: data.merchantCity,
                 originZipCode: data.originZipCode,
                 whatsappNumber: data.whatsappNumber,
+                whatsappMessage: data.whatsappMessage,
                 googleAnalyticsId: data.googleAnalyticsId,
                 facebookPixelId: data.facebookPixelId,
             }

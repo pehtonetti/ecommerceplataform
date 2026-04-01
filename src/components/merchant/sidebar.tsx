@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Store } from 'lucide-react';
 
-export function MerchantSidebar({ storeName }: { storeName: string }) {
+export function MerchantSidebar({ name }: { name: string }) {
     const pathname = usePathname();
 
     const links = [
@@ -31,7 +31,7 @@ export function MerchantSidebar({ storeName }: { storeName: string }) {
                 
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-sm group-hover:bg-white/[0.05] transition-colors">
                     <h2 className="text-sm font-bold text-white m-0 truncate">
-                        {storeName}
+                        {name}
                     </h2>
                     <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Lojista Parceiro</p>
                 </div>

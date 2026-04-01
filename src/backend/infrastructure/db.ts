@@ -18,24 +18,28 @@ export const db = {
   },
 
   async getStoreConfig() {
-    let config = await prisma.storeConfig.findFirst();
-    if (!config) {
-      config = await prisma.storeConfig.create({
+    let store = await prisma.store.findFirst();
+    if (!store) {
+      store = await prisma.store.create({
         data: {
-          storeName: 'Antigravity Store',
-          originZipCode: '01310-100' // Av. Paulista, SP
+          name: 'Simplify Store',
+          slug: 'simplify',
+          ownerId: 'admin',
+          originZipCode: '01310-100',
+          plan: 'pro',
+          active: true
         }
       });
     }
-    return config;
+    return store;
   },
 
   async updateStoreConfig(data: Partial<StoreConfig>) {
     const current = await this.getStoreConfig();
-    return await prisma.storeConfig.update({
+    return await prisma.store.update({
       where: { id: current.id },
       data: {
-        storeName: data.storeName
+        name: data.name
       }
     });
   }
