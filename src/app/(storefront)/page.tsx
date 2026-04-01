@@ -3,6 +3,8 @@ import PromoBannerCarousel from '@/frontend/components/PromoBannerCarousel';
 import ProductSection from '@/frontend/components/ProductSection';
 import FeaturedCategories from '@/frontend/components/FeaturedCategories';
 import { Heart, Clock, Search, Tag, TrendingUp } from 'lucide-react';
+import PlatformLanding from '@/frontend/components/platform/PlatformLanding';
+import { headers } from 'next/headers';
 
 
 async function getRecentlyViewedProducts() {
@@ -149,6 +151,14 @@ async function getAppleProducts() {
 }
 
 export default async function HomePage() {
+  const headersList = await headers();
+  const host = headersList.get('host') ?? '';
+  const isPlatformHost = host === 'localhost:3000' || host === '127.0.0.1:3000' || host === process.env.PLATFORM_DOMAIN;
+
+  if (isPlatformHost) {
+    return <PlatformLanding />;
+  }
+
   const [recentlyViewed, promoProducts, trendingProducts, newProducts, appleProducts] = await Promise.all([
     getRecentlyViewedProducts(),
     getPromoProducts(),

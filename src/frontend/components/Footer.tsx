@@ -38,7 +38,7 @@ export function Footer() {
                                     <div className="h-10 w-10 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-border flex items-center justify-center p-1.5">
                                         <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
                                     </div>
-                                    <h3 className="text-2xl font-bold tracking-tighter">S-Commerce</h3>
+                                    <h3 className="text-2xl font-black tracking-tightest">Simplify</h3>
                                 </div>
                             </Link>
                             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -102,7 +102,7 @@ export function Footer() {
                     </div>
 
                     <div className="border-t border-border mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-                        <p>&copy; {new Date().getFullYear()} LOJA. Todos os direitos reservados. CNPJ: 00.000.000/0001-00</p>
+                        <p>&copy; {new Date().getFullYear()} Simplify. Todos os direitos reservados.</p>
                         <div className="flex gap-6">
                             <Link href="/privacy" className="hover:text-foreground">Privacidade</Link>
                             <Link href="/terms" className="hover:text-foreground">Termos de Uso</Link>

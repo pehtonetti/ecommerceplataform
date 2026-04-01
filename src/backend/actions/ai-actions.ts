@@ -68,3 +68,47 @@ export async function getAiRecommendations() {
         return [];
     }
 }
+import { getStoreId } from "@/backend/lib/store-context";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+export async function generateProductAIContent(productName: string) {
+    try {
+        await getStoreId(); // Safety check
+
+        if (!productName || productName.length < 3) {
+            return { success: false, error: "Nome do produto muito curto." };
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        
+        const prompt = `
+            Você é um especialista em marketing de e-commerce.
+            Dê uma descrição persuasiva e profissional para um produto chamado "${productName}".
+            A descrição deve ter entre 150 e 250 caracteres.
+            Sugira também uma categoria curta (uma palavra) que melhor se encaixe.
+            Retorne APENAS um JSON no formato:
+            {
+                "description": "...",
+                "category": "..."
+            }
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text().replace(/```json|```/g, "").trim();
+
+        try {
+            const json = JSON.parse(text);
+            return { success: true, data: json };
+        } catch (parseError) {
+            console.error("AI Parse Error:", parseError, text);
+            return { success: false, error: "Falha ao processar resposta da IA." };
+        }
+
+    } catch (error: any) {
+        console.error("AI Generation Error:", error);
+        return { success: false, error: error.message || "Erro desconhecido na geração por IA." };
+    }
+}

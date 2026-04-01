@@ -40,33 +40,14 @@ const defaultBanners: Banner[] = [
     },
 ];
 
-export default function PromoBannerCarousel() {
+export default function PromoBannerCarousel({ banners: propBanners = [] }: { banners?: Banner[] }) {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [banners, setBanners] = useState<Banner[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
 
+    // Usa passados via Prop (Puck) ou Fallback para os defaultBanners
+    const banners = propBanners.length > 0 ? propBanners : defaultBanners;
+
     useEffect(() => {
-        async function fetchBanners() {
-            try {
-                const res = await fetch('/api/banners');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        setBanners(data);
-                    } else {
-                        // Fallback to minimal defaults if no banners exist
-                        setBanners(defaultBanners);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading banners:', error);
-                setBanners(defaultBanners);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchBanners();
         setIsMounted(true);
     }, []);
 

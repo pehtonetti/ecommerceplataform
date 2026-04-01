@@ -1,9 +1,23 @@
+'use server'
+
 import { prisma } from "@/lib/prisma";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export async function getMarketingCustomers() {
     try {
+        const storeId = await getStoreId();
+        
+        // Clientes da loja são usuários que têm pedidos nela
+        const orders = await prisma.order.findMany({
+            where: { storeId },
+            select: { userId: true },
+            distinct: ['userId']
+        });
+
+        const userIds = orders.map(o => o.userId);
+
         const customers = await prisma.user.findMany({
-            where: { role: 'customer' },
+            where: { id: { in: userIds } },
             select: {
                 id: true,
                 name: true,
@@ -11,18 +25,28 @@ export async function getMarketingCustomers() {
                 createdAt: true
             }
         });
+
         return { success: true, customers };
     } catch (error) {
-        return { success: false, error: 'Falha ao buscar clientes' };
+        console.error("Marketing error:", error);
+        return { success: false, error: 'Falha ao buscar clientes da loja' };
     }
 }
 
 export async function sendEmailCampaign(subject: string, content: string) {
-    // Real-ish: count customers first
-    const count = await prisma.user.count({ where: { role: 'customer' } });
-    console.log(`Sending email campaign: ${subject} to ${count} recipients`);
+    const storeId = await getStoreId();
     
-    // In a real app, we would loop through customers and send via SendGrid/Nodemailer
+    // Contar clientes únicos da loja
+    const recipients = await prisma.order.groupBy({
+        by: ['userId'],
+        where: { storeId },
+        _count: true
+    });
+
+    const count = recipients.length;
+    console.log(`Sending email campaign: ${subject} to ${count} recipients for store ${storeId}`);
+    
+    // Simulação de envio
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     return { success: true, recipients: count };

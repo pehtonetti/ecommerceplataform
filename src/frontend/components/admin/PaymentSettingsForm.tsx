@@ -10,7 +10,7 @@ export function PaymentSettingsForm() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
-        storeName: "",
+        name: "",
         pixKey: "",
         merchantCity: "",
         originZipCode: "",
@@ -28,7 +28,7 @@ export function PaymentSettingsForm() {
 
         if (result.success && result.config) {
             setFormData({
-                storeName: result.config.storeName || "",
+                name: result.config.name || "",
                 pixKey: result.config.pixKey || "",
                 merchantCity: result.config.merchantCity || "",
                 originZipCode: result.config.originZipCode || "",
@@ -86,8 +86,8 @@ export function PaymentSettingsForm() {
                         </label>
                         <input
                             type="text"
-                            value={formData.storeName}
-                            onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-zinc-950"
                             placeholder="Ex: Simplify - Loja Online"
                             required

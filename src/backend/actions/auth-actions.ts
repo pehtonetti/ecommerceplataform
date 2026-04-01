@@ -58,7 +58,12 @@ export async function login(formData: FormData) {
 
         // Return success with redirect URL instead of redirecting directly
         // This allows the client to handle the redirect smoothly
-        const redirectUrl = (user.role === 'admin' || user.role === 'editor') ? '/admin' : '/';
+        let redirectUrl = '/';
+        if (user.role === 'admin' || user.role === 'editor') {
+            redirectUrl = '/admin';
+        } else if (user.role === 'merchant') {
+            redirectUrl = '/dashboard';
+        }
 
         return {
             success: true,

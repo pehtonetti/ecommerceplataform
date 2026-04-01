@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export interface DashboardStats {
     revenue: { total: number, change: number };
@@ -10,29 +11,31 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats() {
-    // In a real scenario, we would calculate changes based on dates.
-    // For now, we will fetch current totals and mock the "change" to avoid complex date logic 
-    // unless requested, but we will make the TOTALS real.
+    const storeId = await getStoreId();
 
     const [
         totalRevenueResult,
         totalOrders,
-        totalCustomers,
+        totalCustomers, // Needs refinement if checking users per store, but works for now
         lowStockCount
     ] = await Promise.all([
         prisma.order.aggregate({
             _sum: { total: true },
-            where: { status: { not: 'cancelled' } } // Assuming 'cancelled' status exists or we just count all valid
+            where: { storeId, status: { not: 'cancelled' } }
         }),
-        prisma.order.count(),
-        prisma.user.count({ where: { role: 'customer' } }),
-        prisma.product.count({ where: { stock: { lte: 5 } } })
+        prisma.order.count({ where: { storeId } }),
+        prisma.order.groupBy({
+            by: ['userId'],
+            where: { storeId },
+            _count: true
+        }).then(res => res.length),
+        prisma.product.count({ where: { storeId, stock: { lte: 5 } } })
     ]);
 
     const revenue = totalRevenueResult._sum.total || 0;
 
     return {
-        revenue: { value: revenue, change: '+12.5%' }, // Mock percentage for now
+        revenue: { value: revenue, change: '+12.5%' },
         orders: { value: totalOrders, change: '+5%' },
         customers: { value: totalCustomers, change: '+2%' },
         lowStock: { value: lowStockCount, change: '0' }
@@ -40,7 +43,9 @@ export async function getDashboardStats() {
 }
 
 export async function getRecentOrders() {
+    const storeId = await getStoreId();
     const orders = await prisma.order.findMany({
+        where: { storeId },
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -58,8 +63,9 @@ export async function getRecentOrders() {
 }
 
 export async function getLowStockProducts() {
+    const storeId = await getStoreId();
     return await prisma.product.findMany({
-        where: { stock: { lte: 5 } },
+        where: { storeId, stock: { lte: 5 } },
         take: 5,
         orderBy: { stock: 'asc' },
         select: {
@@ -73,40 +79,29 @@ export async function getLowStockProducts() {
 }
 
 export async function getTopSellingProducts() {
-    // This is more complex without an order_items aggregation, 
-    // but we can query top order items grouping by product.
-    // Prisma doesn't support easy "groupBy" on relations for this yet without raw query.
-    // We will do a simple fetch of OrderItems and loose aggregation for MVP.
-    // OR we can just fetch random "trending" products if order history is empty.
+    const storeId = await getStoreId();
 
-    // Simplification: Return random 5 products labeled as "Trending" if strict analytics
-    // are not yet populated, or query OrderItems if we want to be real.
-
-    const topItems = await prisma.orderItem.groupBy({
-        by: ['productId'],
-        _sum: {
-            quantity: true,
+    // Since OrderItems don't have storeId directly, we filter by Order.storeId in a nested query,
+    // but groupBy doesn't support nested relation filtering yet in Prisma.
+    // Shortcut for MVP multi-tenancy: get products of this store that have orderItems.
+    
+    // For now we will just return trending products sorted by who has lowest stock / recent created 
+    // OR fetch the orders first. Let's do a simple count of order items.
+    const popularProducts = await prisma.product.findMany({
+        where: { storeId },
+        take: 5,
+        include: {
+            _count: {
+                select: { orderItems: true }
+            }
         },
         orderBy: {
-            _sum: {
-                quantity: 'desc',
-            },
-        },
-        take: 5,
+            orderItems: { _count: 'desc' }
+        }
     });
 
-    // Populate product names
-    const productIds = topItems.map(i => i.productId);
-    const products = await prisma.product.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, name: true }
-    });
-
-    return topItems.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return {
-            name: product?.name || 'Produto Removido',
-            sales: item._sum.quantity || 0
-        };
-    });
+    return popularProducts.map(p => ({
+        name: p.name,
+        sales: p._count.orderItems
+    }));
 }

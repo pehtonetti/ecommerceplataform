@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { MousePointer2, Clock, MapPin, Eye, ShoppingCart, User } from "lucide-react";
 
-export default function UserBehaviorPage({ params }: { params: { id: string } }) {
+export default function UserBehaviorPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ export default function UserBehaviorPage({ params }: { params: { id: string } })
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Jornada do Usuário</h1>
-                            <p className="text-sm text-muted-foreground">ID: {params.id}</p>
+                            <p className="text-sm text-muted-foreground">ID: {id}</p>
                         </div>
                     </div>
                 </div>

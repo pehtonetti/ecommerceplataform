@@ -2,8 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export async function createCategory(formData: FormData) {
+    const storeId = await getStoreId();
     const name = formData.get('name')?.toString();
     const description = formData.get('description')?.toString();
     const imageUrl = formData.get('imageUrl')?.toString();
@@ -12,6 +14,7 @@ export async function createCategory(formData: FormData) {
 
     await prisma.category.create({
         data: {
+            storeId,
             name,
             description,
             imageUrl,
@@ -23,11 +26,15 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(id: string, formData: FormData) {
+    const storeId = await getStoreId();
     const name = formData.get('name')?.toString();
     const description = formData.get('description')?.toString();
     const imageUrl = formData.get('imageUrl')?.toString();
 
     if (!name) throw new Error("Nome é obrigatório");
+
+    const category = await prisma.category.findFirst({ where: { id, storeId } });
+    if (!category) throw new Error("Categoria não encontrada.");
 
     await prisma.category.update({
         where: { id },
@@ -43,12 +50,13 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
-    const category = await prisma.category.findUnique({ where: { id } });
+    const storeId = await getStoreId();
+    const category = await prisma.category.findFirst({ where: { id, storeId } });
     if (!category) return;
     
     // Verificar se a categoria tem produtos
     const productsUsing = await prisma.product.count({
-        where: { category: category.name }
+        where: { category: category.name, storeId }
     });
 
     if (productsUsing > 0) {
@@ -63,7 +71,9 @@ export async function deleteCategory(id: string) {
 }
 
 export async function getCategories() {
+    const storeId = await getStoreId();
     return await prisma.category.findMany({
+        where: { storeId },
         orderBy: { name: 'asc' }
     });
 }

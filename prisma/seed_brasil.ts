@@ -5,7 +5,21 @@ const prisma = new PrismaClient();
 const main = async () => {
     console.log('--- INICIANDO IMPORTAÇÃO FIEL: 100 PRODUTOS BR ---');
 
-    // Mapeamento de Categorias Oficiais (Removido 'Eletronicos')
+    // 0. Garantir uma Loja Padrão para Multi-tenancy
+    let store = await prisma.store.findFirst({ where: { slug: 'simplify' } });
+    if (!store) {
+        store = await prisma.store.create({
+            data: {
+                name: 'Simplify Store',
+                slug: 'simplify',
+                ownerId: 'seed-admin',
+                active: true,
+                plan: 'pro'
+            }
+        });
+    }
+
+    // Mapeamento de Categorias Oficiais
     const categoriesData = [
         { name: 'Smartphones', slug: 'smartphones' },
         { name: 'Notebooks', slug: 'notebooks' },
@@ -19,9 +33,18 @@ const main = async () => {
 
     for (const cat of categoriesData) {
         await prisma.category.upsert({
-            where: { slug: cat.slug },
+            where: { 
+                storeId_slug: {
+                    storeId: store.id,
+                    slug: cat.slug
+                }
+            },
             update: { name: cat.name },
-            create: { name: cat.name, slug: cat.slug },
+            create: { 
+                name: cat.name, 
+                slug: cat.slug,
+                storeId: store.id
+            },
         });
     }
 
@@ -169,6 +192,7 @@ const main = async () => {
                 imageUrl: p.img,
                 category: p.cat,
                 active: true,
+                storeId: store.id,
                 currency: 'BRL'
             }
         });

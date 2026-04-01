@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingBag, Menu, User, LayoutDashboard, Settings, LogOut, Coins, Heart, MapPin } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -8,7 +9,7 @@ import { toast } from 'sonner';
 import { MiniCart } from './ui/MiniCart';
 import { useRouter } from 'next/navigation';
 
-export function Header({ user }: { user?: any }) {
+export function Header({ user, store }: { user?: any; store?: any }) {
     const router = useRouter();
 
     const handleSearch = (filters: any) => {
@@ -26,10 +27,18 @@ export function Header({ user }: { user?: any }) {
                         <Menu className="h-5 w-5" />
                     </Button>
                     <Link href="/" className="flex items-center gap-3 group">
-                        <div suppressHydrationWarning className="bg-foreground/5 h-10 w-10 rounded-lg flex items-center justify-center border border-border/50 group-hover:border-primary/50 transition-colors p-1.5">
-                            <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                        <div suppressHydrationWarning className="bg-foreground/5 h-10 w-10 rounded-lg flex items-center justify-center border border-border/50 group-hover:border-primary/50 transition-colors p-1.5 relative overflow-hidden">
+                            <Image 
+                                src={store?.logoUrl || "/images/logo.png"} 
+                                alt={store?.name || "Logo"} 
+                                fill
+                                priority
+                                className="object-contain p-1"
+                            />
                         </div>
-                        <span className="font-bold text-xl tracking-tight hidden sm:block group-hover:text-primary transition-colors">Simplify</span>
+                        <span className="font-bold text-xl tracking-tight hidden sm:block group-hover:text-primary transition-colors">
+                            {store?.name || "Simplify"}
+                        </span>
                     </Link>
                 </div>
 

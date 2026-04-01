@@ -2,62 +2,84 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// ─── Platform root domain (set in .env as PLATFORM_DOMAIN) ───────────────────
+const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN ?? 'localhost';
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const hostname = request.headers.get('host') ?? '';
+    const host = hostname.split(':')[0]; // strip port
 
-    // Caminhos que exigem autenticação básica (cliente)
+    // ── Resolve store slug from hostname and inject as header ──────────────────
+    // This runs at the Edge, so we can't hit the DB — we just extract the slug.
+    // The server-side store-context.ts helper will do the DB lookup using this slug.
+    let storeSlug: string | null = null;
+    if (host.endsWith(`.${PLATFORM_DOMAIN}`) && PLATFORM_DOMAIN !== 'localhost') {
+        storeSlug = host.replace(`.${PLATFORM_DOMAIN}`, '');
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    if (storeSlug) {
+        requestHeaders.set('x-store-slug', storeSlug);
+    }
+    requestHeaders.set('x-hostname', host);
+
+    // ── Route protection ────────────────────────────────────────────────────────
+
+    // Paths requiring basic authentication (customer)
     const clientPaths = ['/account', '/orders', '/checkout/success'];
-    // Caminhos que exigem nível administrativo (admin ou editor)
+    // Paths requiring admin or editor role
     const adminPaths = ['/admin', '/api/admin'];
+    // Paths requiring merchant role (lojista dashboard)
+    const dashboardPaths = ['/dashboard'];
 
     const isClientPath = clientPaths.some(path => pathname.startsWith(path));
     const isAdminPath = adminPaths.some(path => pathname.startsWith(path));
+    const isDashboardPath = dashboardPaths.some(path => pathname.startsWith(path));
 
-    // Se não for rota protegida, deixa passar
-    if (!isClientPath && !isAdminPath) {
-        return NextResponse.next();
+    // Pass through if not a protected route
+    if (!isClientPath && !isAdminPath && !isDashboardPath) {
+        return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
-    // Verifica se o cookie de sessão existe
+    // Check session cookie
     const sessionToken = request.cookies.get('ecommerce_session');
-
     if (!sessionToken) {
-        // Bloqueio Total: Sem token, redireciona para login
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
     }
 
-    // Validação de Hierarquia (Admin/Editor) via cookie de role 
-    if (isAdminPath) {
-        const userRole = request.cookies.get('user_role')?.value;
+    const userRole = request.cookies.get('user_role')?.value;
 
-        // Se o cookie de role existir, fazemos a validação estrita
-        if (userRole) {
-            if (userRole !== 'admin' && userRole !== 'editor') {
-                console.error(`Acesso negado ao Admin: Role [${userRole}] insuficiente para ${pathname}`);
-
-                if (pathname.startsWith('/api/')) {
-                    return new NextResponse(
-                        JSON.stringify({ error: 'Não autorizado. Nível de acesso insuficiente.' }),
-                        { status: 403, headers: { 'Content-Type': 'application/json' } }
-                    );
-                }
-                return NextResponse.redirect(new URL('/', request.url));
+    // Admin paths: must be admin or editor
+    if (isAdminPath && userRole) {
+        if (userRole !== 'admin' && userRole !== 'editor') {
+            if (pathname.startsWith('/api/')) {
+                return new NextResponse(
+                    JSON.stringify({ error: 'Não autorizado. Nível de acesso insuficiente.' }),
+                    { status: 403, headers: { 'Content-Type': 'application/json' } }
+                );
             }
+            return NextResponse.redirect(new URL('/', request.url));
         }
-        // Se o cookie de role não existir (sessão antiga), deixamos passar no middleware 
-        // e o AdminLayout (Server Component) fará a validação final no Banco de Dados
-        // e regenerará o cookie de role para as próximas requisições.
     }
 
-    return NextResponse.next();
+    // Dashboard paths: must be merchant or admin
+    if (isDashboardPath && userRole) {
+        if (userRole !== 'merchant' && userRole !== 'admin') {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+    }
+
+    return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
-// Configuração de Matcher para cobrir todo o projeto sensível
+// Matcher covering all sensitive project routes
 export const config = {
     matcher: [
         '/admin/:path*',
+        '/dashboard/:path*',
         '/account/:path*',
         '/orders/:path*',
         '/checkout/success/:path*',

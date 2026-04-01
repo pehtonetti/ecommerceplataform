@@ -20,9 +20,8 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
     const [selectedAddressId, setSelectedAddressId] = useState<string>(addresses[0]?.id || "");
     const [isCreatingAddress, setIsCreatingAddress] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("credit_card");
-    const [document, setDocument] = useState(user?.document || ""); // CPF/CNPJ State
+    const [document, setDocument] = useState(user?.document || "");
     const [isProcessing, setIsProcessing] = useState(false);
-    const [step, setStep] = useState(1); // 1: Endereço, 2: Pagamento, 3: Revisão
 
     // Coupon State
     const [couponCode, setCouponCode] = useState("");
@@ -39,9 +38,8 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
 
     const items = cart.items;
     const subtotal = items.reduce((acc: number, item: any) => acc + (item.product.price * item.quantity), 0);
-    const shippingCost = 2500; // Fixed mock shipping
+    const shippingCost = 2500;
 
-    // Calculate Discount
     let discountAmount = 0;
     if (appliedCoupon) {
         if (appliedCoupon.discountType === 'percentage') {
@@ -54,13 +52,14 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
     const totalBeforePix = subtotal + shippingCost - discountAmount;
     const pixDiscount = paymentMethod === 'pix' ? Math.floor(totalBeforePix * 0.05) : 0;
     const finalTotal = totalBeforePix - pixDiscount;
+    const taxes = Math.floor(subtotal * 0.18);
+    const orderTotal = finalTotal + taxes;
 
     const handleApplyCoupon = async () => {
         if (!couponCode) return;
         setIsValidatingCoupon(true);
         const res = await validateCoupon(couponCode);
         setIsValidatingCoupon(false);
-
         if (res.success) {
             setAppliedCoupon(res.coupon);
             toast.success("Cupom aplicado!");
@@ -69,44 +68,13 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
         }
     };
 
-    const handleRemoveCoupon = () => {
-        setAppliedCoupon(null);
-        setCouponCode("");
-    };
-
-    const handleAddressSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const res = await createAddress(formData);
-        if (res?.success) {
-            toast.success("Endereço adicionado!");
-            setIsCreatingAddress(false);
-            router.refresh();
-        } else {
-            toast.error("Erro ao adicionar endereço");
-        }
-    };
-
     const handlePlaceOrder = async () => {
-        if (!selectedAddressId) {
-            toast.error("Selecione um endereço de entrega");
-            return;
-        }
-
-        if (!document || document.length < 11) {
-            toast.error("Informe um CPF/CNPJ válido para a Nota Fiscal");
-            return;
-        }
-
-        if (paymentMethod === 'credit_card') {
-            if (cardData.number.length < 13 || !cardData.cvc) {
-                toast.error("Preencha os dados do cartão");
-                return;
-            }
-        }
+        if (!selectedAddressId) return toast.error("Selecione um endereço");
+        if (!document || document.length < 11) return toast.error("Informe um documento válido");
+        if (paymentMethod === 'credit_card' && (!cardData.number || !cardData.cvc)) return toast.error("Dados do cartão incompletos");
 
         setIsProcessing(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         const res = await checkoutOrder({
             addressId: selectedAddressId,
@@ -116,325 +84,231 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
             total: finalTotal,
             couponId: appliedCoupon?.id,
             discountAmount: discountAmount + pixDiscount,
-            document // Pass document to server action
+            document
         });
 
         setIsProcessing(false);
 
         if (res?.success) {
-            toast.success("Pedido realizado com sucesso!");
-
-            // Redirect to Payment URL (Stripe) or Success Page
-            if (res.url) {
-                window.location.href = res.url;
-            } else {
-                router.replace(`/checkout/success/${res.orderId}`);
-            }
+            toast.success("Pedido realizado!");
+            if (res.url) window.location.href = res.url;
+            else router.replace(`/checkout/success/${res.orderId}`);
         } else {
-            toast.error(res?.error || "Erro ao finalizar pedido");
+            toast.error(res?.error || "Erro no checkout");
         }
     };
 
     return (
-        <div className="container mx-auto px-4 pt-32 pb-20 max-w-7xl">
-            {/* Steps Indicator */}
-            <div className="max-w-2xl mx-auto mb-12">
-                <div className="flex items-center justify-between relative">
-                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 dark:bg-zinc-800 -translate-y-1/2 z-0"></div>
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((step - 1) / 2) * 100}%` }}
-                        className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0 transition-all duration-500"
-                    ></motion.div>
-
-                    {[
-                        { s: 1, icon: MapPin, label: "Endereço" },
-                        { s: 2, icon: CreditCard, label: "Pagamento" },
-                        { s: 3, icon: CheckCircle2, label: "Revisão" }
-                    ].map((item) => (
-                        <div key={item.s} className="relative z-10 flex flex-col items-center gap-2">
-                            <button
-                                onClick={() => step > item.s && setStep(item.s)}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${step >= item.s ? 'bg-primary text-white scale-110 shadow-lg' : 'bg-gray-100 dark:bg-zinc-800 text-gray-400'
-                                    }`}
-                            >
-                                <item.icon className="w-5 h-5" />
-                            </button>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${step >= item.s ? 'text-primary' : 'text-gray-400'}`}>
-                                {item.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+        <div className="container mx-auto px-4 pt-12 pb-20 max-w-7xl">
+            <div className="flex items-center gap-2 mb-8 opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-sm font-bold uppercase tracking-widest" onClick={() => router.back()}>
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                Voltar para o carrinho
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {/* Left Column: Flow */}
-                <div className="lg:col-span-2 space-y-6">
-
-                    {/* 1. Address Section */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-border p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-primary/10 p-2 rounded-full text-primary">
-                                <MapPin className="w-5 h-5" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                
+                {/* Left: Express Sections */}
+                <div className="lg:col-span-8 space-y-6">
+                    
+                    {/* 1. Address Section - Express */}
+                    <section className="bg-white dark:bg-zinc-950 rounded-3xl border border-border/50 p-8 shadow-xl shadow-black/5 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-all" />
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-indigo-500/10 p-3 rounded-2xl text-indigo-500">
+                                    <MapPin className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-2xl font-black tracking-tight">Onde entregamos?</h2>
                             </div>
-                            <h2 className="text-xl font-bold">Endereço de Entrega</h2>
                         </div>
 
-                        {isCreatingAddress ? (
-                            <form onSubmit={handleAddressSubmit} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input
-                                        name="zipCode"
-                                        placeholder="CEP"
-                                        className="border p-2 rounded w-full bg-white dark:bg-zinc-800"
-                                        required
-                                        maxLength={9}
-                                    />
-                                    <input name="number" placeholder="Número" className="border p-2 rounded bg-white dark:bg-zinc-800" required />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {addresses.map(addr => (
+                                <button
+                                    key={addr.id}
+                                    onClick={() => setSelectedAddressId(addr.id)}
+                                    className={`text-left p-5 rounded-2xl border-2 transition-all relative ${
+                                        selectedAddressId === addr.id 
+                                        ? 'border-indigo-600 bg-indigo-50/20 dark:bg-indigo-500/5 ring-4 ring-indigo-500/10' 
+                                        : 'border-border hover:border-indigo-300 dark:hover:border-zinc-800'
+                                    }`}
+                                >
+                                    <p className="font-black text-sm uppercase tracking-tight mb-1">{addr.label || 'Endereço'}</p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">{addr.street}, {addr.number}</p>
+                                    <p className="text-xs text-muted-foreground">{addr.city} - {addr.state}</p>
+                                    {selectedAddressId === addr.id && <CheckCircle2 className="w-5 h-5 absolute top-5 right-5 text-indigo-600" />}
+                                </button>
+                            ))}
+                            <button 
+                                onClick={() => setIsCreatingAddress(true)}
+                                className="p-5 rounded-2xl border-2 border-dashed border-border hover:border-indigo-500 hover:bg-indigo-50/10 transition-all flex flex-col items-center justify-center gap-2 group"
+                            >
+                                <div className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-900 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                                    <Plus className="w-4 h-4" />
                                 </div>
-                                <input name="street" placeholder="Rua / Logradouro" className="w-full border p-2 rounded bg-white dark:bg-zinc-800" required />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input name="neighborhood" placeholder="Bairro" className="border p-2 rounded bg-white dark:bg-zinc-800" required />
-                                    <input name="city" placeholder="Cidade" className="border p-2 rounded bg-white dark:bg-zinc-800" required />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input name="state" placeholder="Estado (UF)" className="border p-2 rounded bg-white dark:bg-zinc-800" required />
-                                    <input name="label" placeholder="Apelido (ex: Casa)" className="border p-2 rounded bg-white dark:bg-zinc-800" />
-                                </div>
-                                <div className="flex gap-2 justify-end">
-                                    <Button type="button" variant="ghost" onClick={() => setIsCreatingAddress(false)}>Cancelar</Button>
-                                    <Button type="submit">Salvar Endereço</Button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="space-y-3">
-                                {addresses.map(addr => (
-                                    <label key={addr.id} className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-300'}`}>
-                                        <input
-                                            type="radio"
-                                            name="address"
-                                            value={addr.id}
-                                            checked={selectedAddressId === addr.id}
-                                            onChange={() => setSelectedAddressId(addr.id)}
-                                            className="mt-1"
-                                        />
-                                        <div>
-                                            <p className="font-semibold text-black dark:text-white">{addr.label} - {addr.street}, {addr.number}</p>
-                                            <p className="text-sm text-muted-foreground">{addr.neighborhood}, {addr.city} - {addr.state} ({addr.zipCode})</p>
-                                        </div>
-                                    </label>
-                                ))}
-                                <Button variant="outline" className="w-full mt-2" onClick={() => setIsCreatingAddress(true)}>
-                                    + Adicionar Novo Endereço
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground group-hover:text-indigo-500">Novo Endereço</span>
+                            </button>
+                        </div>
+                    </section>
 
-                    {/* 2. Payment Section */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-border p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-primary/10 p-2 rounded-full text-primary">
-                                <CreditCard className="w-5 h-5" />
+                    {/* 2. Payment Section - Express */}
+                    <section className="bg-white dark:bg-zinc-950 rounded-3xl border border-border/50 p-8 shadow-xl shadow-black/5 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-all" />
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="bg-emerald-500/10 p-3 rounded-2xl text-emerald-500">
+                                <CreditCard className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold">Pagamento</h2>
+                            <h2 className="text-2xl font-black tracking-tight">Pagamento & Fiscal</h2>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex gap-2 overflow-x-auto pb-2">
-                                {['credit_card', 'pix', 'boleto'].map(method => (
-                                    <button
-                                        key={method}
-                                        onClick={() => setPaymentMethod(method)}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium border whitespace-nowrap transition-colors ${paymentMethod === method ? 'bg-primary text-white border-primary' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-800 text-black dark:text-white border-border'}`}
-                                    >
-                                        {method === 'credit_card' && 'Cartão de Crédito'}
-                                        {method === 'pix' && 'PIX (5% desc)'}
-                                        {method === 'boleto' && 'Boleto Bancário'}
-                                    </button>
-                                ))}
-                            </div>
+                        <div className="grid grid-cols-3 gap-3 mb-8">
+                            {['credit_card', 'pix', 'boleto'].map(method => (
+                                <button
+                                    key={method}
+                                    onClick={() => setPaymentMethod(method)}
+                                    className={`py-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${
+                                        paymentMethod === method 
+                                        ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-500/5 ring-4 ring-emerald-500/10' 
+                                        : 'border-border hover:border-emerald-300 dark:hover:border-zinc-800 opacity-60'
+                                    }`}
+                                >
+                                    <div className={`p-2 rounded-xl ${paymentMethod === method ? 'bg-emerald-500 text-white' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500'}`}>
+                                        {method === 'credit_card' ? <CreditCard className="w-5 h-5" /> : method === 'pix' ? <Zap className="w-5 h-5" /> : <Barcode className="w-5 h-5" />}
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">
+                                        {method === 'credit_card' ? 'Cartão' : method === 'pix' ? 'Pix (5%)' : 'Boleto'}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
 
-                            {/* Billing Info: CPF/CNPJ */}
-                            <div className="p-4 border border-border rounded-xl bg-gray-50 dark:bg-zinc-950/30 space-y-4">
-                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Dados Fiscais (NFe)</h3>
-                                <div className="space-y-1">
-                                    <input
-                                        type="text"
-                                        placeholder="CPF/CNPJ do Titular"
-                                        className="w-full border p-2 rounded bg-white dark:bg-zinc-800 text-black dark:text-white focus:ring-2 focus:ring-primary/20 outline-none"
-                                        value={document}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/\D/g, '');
-                                            if (val.length <= 14) setDocument(val);
-                                        }}
-                                        maxLength={14}
-                                    />
-                                    <p className="text-[10px] text-muted-foreground">Necessário para emissão da Nota Fiscal Eletrônica.</p>
-                                </div>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Documento (CPF/CNPJ)</label>
+                                <input
+                                    type="text"
+                                    value={document}
+                                    onChange={(e) => setDocument(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                                    placeholder="000.000.000-00"
+                                    className="w-full p-4 rounded-2xl border border-border/80 bg-zinc-50 dark:bg-zinc-900 focus:ring-4 focus:ring-emerald-500/10 ring-offset-0 outline-none transition-all font-mono"
+                                />
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 uppercase font-bold tracking-tight">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                                    Conexão Segura para emissão de nota fiscal
+                                </p>
                             </div>
 
                             {paymentMethod === 'credit_card' && (
-                                <div className="p-4 border border-border rounded-xl bg-gray-50 dark:bg-zinc-950/30 space-y-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Número do Cartão"
-                                        className="w-full border p-2 rounded bg-white dark:bg-zinc-800 text-black dark:text-white"
-                                        value={cardData.number}
-                                        onChange={e => setCardData({ ...cardData, number: e.target.value })}
-                                    />
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Nome no Cartão"
-                                            className="border p-2 rounded bg-white dark:bg-zinc-800 text-black dark:text-white"
-                                            value={cardData.name}
-                                            onChange={e => setCardData({ ...cardData, name: e.target.value })}
-                                        />
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="MM/AA"
-                                                className="border p-2 rounded bg-white dark:bg-zinc-800 text-black dark:text-white"
-                                                value={cardData.expiry}
-                                                onChange={e => setCardData({ ...cardData, expiry: e.target.value })}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="CVC"
-                                                className="border p-2 rounded bg-white dark:bg-zinc-800 text-black dark:text-white"
-                                                value={cardData.cvc}
-                                                onChange={e => setCardData({ ...cardData, cvc: e.target.value })}
-                                            />
-                                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Número do Cartão</label>
+                                        <input type="text" placeholder="0000 0000 0000 0000" className="w-full p-4 rounded-2xl border border-border/80 bg-zinc-50 dark:bg-zinc-900 font-mono outline-none" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Expiração</label>
+                                        <input type="text" placeholder="MM/AA" className="w-full p-4 rounded-2xl border border-border/80 bg-zinc-50 dark:bg-zinc-900 font-mono outline-none" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">CVC</label>
+                                        <input type="text" placeholder="123" className="w-full p-4 rounded-2xl border border-border/80 bg-zinc-50 dark:bg-zinc-900 font-mono outline-none" />
                                     </div>
                                 </div>
                             )}
-
-                            {paymentMethod === 'pix' && (
-                                <div className="p-8 border border-border rounded-xl bg-green-50 dark:bg-green-950/10 text-center">
-                                    <p className="font-medium text-green-700 dark:text-green-400">O QR Code Pix será gerado após o checkout.</p>
-                                </div>
-                            )}
                         </div>
-                    </div>
-
-                    {/* 3. Review Items */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-border p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-primary/10 p-2 rounded-full text-primary">
-                                <CheckCircle2 className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-xl font-bold">Revisão dos Itens</h2>
-                        </div>
-
-                        <div className="space-y-4">
-                            {cart.items.map((item: any) => (
-                                <div key={item.id} className="flex gap-4 py-2 border-b border-border last:border-0 pb-4">
-                                    <div className="relative w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-md overflow-hidden flex-shrink-0">
-                                        {item.product.imageUrl && <Image src={item.product.imageUrl} alt={item.product.name} fill className="object-cover" />}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="font-medium line-clamp-1 text-black dark:text-white">{item.product.name}</h4>
-                                        <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                                            <span>Qtd: {item.quantity}</span>
-                                            <span className="font-semibold text-black dark:text-white">
-                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.product.price / 100)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    </section>
                 </div>
 
-                {/* Right Column: Order Summary */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-border p-6 shadow-lg sticky top-24 space-y-6">
-                        <h3 className="text-lg font-bold text-black dark:text-white">Resumo do Pedido</h3>
+                {/* Right: Floating Summary - Express */}
+                <div className="lg:col-span-4 lg:sticky lg:top-24">
+                    <section className="bg-zinc-950 text-white rounded-[40px] p-10 shadow-2xl shadow-indigo-500/20 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                            <Sparkles className="w-32 h-32 text-indigo-500" />
+                        </div>
 
-                        {/* Coupon Input */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-                                <Tag className="w-4 h-4" />
-                                <span>Possui cupom?</span>
-                            </div>
-                            {appliedCoupon ? (
-                                <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <Ticket className="w-4 h-4 text-primary" />
-                                        <span className="text-sm font-bold text-primary uppercase">{appliedCoupon.code}</span>
+                        <h3 className="text-xl font-black tracking-tightest mb-8 flex items-center gap-2">
+                            Resumo Express
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        </h3>
+
+                        <div className="space-y-6">
+                            <div className="space-y-4 max-h-[200px] overflow-y-auto custom-scrollbar pr-2 mb-6">
+                                {items.map((item: any) => (
+                                    <div key={item.id} className="flex gap-4 items-center border-b border-white/10 pb-4">
+                                        <div className="relative w-14 h-14 bg-white/5 rounded-2xl overflow-hidden flex-shrink-0">
+                                            {item.product.imageUrl && <Image src={item.product.imageUrl} alt={item.product.name} fill className="object-cover scale-110" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold truncate opacity-80">{item.product.name}</p>
+                                            <p className="text-[10px] font-black tracking-widest uppercase text-indigo-400">Qtd {item.quantity}</p>
+                                        </div>
+                                        <p className="text-xs font-black">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.product.price / 100)}
+                                        </p>
                                     </div>
-                                    <button onClick={handleRemoveCoupon} className="text-xs text-red-500 hover:underline">Remover</button>
-                                </div>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="CÓDIGO"
-                                        className="flex-1 bg-gray-50 dark:bg-zinc-800 border border-border rounded-lg px-3 py-2 text-sm focus:outline-primary uppercase"
-                                        value={couponCode}
-                                        onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                                    />
-                                    <Button size="sm" onClick={handleApplyCoupon} disabled={isValidatingCoupon}>
-                                        Aplicar
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-3 py-4 border-t border-b border-border">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Subtotal</span>
-                                <span className="text-black dark:text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal / 100)}</span>
+                                ))}
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Frete</span>
-                                <span className="text-black dark:text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(shippingCost / 100)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Impostos estimados</span>
-                                <span className="text-black dark:text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((subtotal * 0.18) / 100)}</span>
-                            </div>
-                            {appliedCoupon && (
-                                <div className="flex justify-between text-sm text-primary font-medium">
-                                    <span>Desconto ({appliedCoupon.code})</span>
-                                    <span>- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(discountAmount / 100)}</span>
-                                </div>
-                            )}
-                            {pixDiscount > 0 && (
-                                <div className="flex justify-between text-sm text-green-600 font-medium">
-                                    <span>Desconto PIX (5%)</span>
-                                    <span>- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pixDiscount / 100)}</span>
-                                </div>
-                            )}
-                        </div>
 
-                        <div className="flex justify-between text-xl font-bold py-2">
-                            <span className="text-black dark:text-white">Total</span>
-                            <span className="text-primary">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((finalTotal + (subtotal * 0.18)) / 100)}
-                            </span>
-                        </div>
-
-                        <Button
-                            size="lg"
-                            className="w-full text-lg font-bold"
-                            onClick={handlePlaceOrder}
-                            disabled={isProcessing}
-                        >
-                            {isProcessing ? "Processando..." : (
-                                <div className="flex items-center gap-2">
-                                    <span>Finalizar Compra</span>
-                                    <ChevronRight className="w-5 h-5" />
+                            <div className="space-y-3 pt-6 border-t border-white/10">
+                                <div className="flex justify-between items-center text-xs opacity-60 font-bold uppercase tracking-widest">
+                                    <span>Produtos</span>
+                                    <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal / 100)}</span>
                                 </div>
-                            )}
-                        </Button>
-                    </div>
+                                <div className="flex justify-between items-center text-xs opacity-60 font-bold uppercase tracking-widest">
+                                    <span>Entrega</span>
+                                    <span className="text-emerald-400 font-black">GRÁTIS</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs opacity-60 font-bold uppercase tracking-widest">
+                                    <span>Taxas / Impostos</span>
+                                    <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(taxes / 100)}</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between items-center text-xs text-indigo-400 font-black uppercase tracking-widest">
+                                        <span>Desconto</span>
+                                        <span>- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(discountAmount / 100)}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-6">
+                                <div className="flex flex-col gap-1 mb-8">
+                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Final</span>
+                                    <span className="text-4xl font-black tracking-tightest text-white leading-none">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orderTotal / 100)}
+                                    </span>
+                                </div>
+
+                                <Button
+                                    size="lg"
+                                    onClick={handlePlaceOrder}
+                                    disabled={isProcessing}
+                                    className="w-full py-8 rounded-3xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-md shadow-xl shadow-indigo-600/20 group relative overflow-hidden"
+                                >
+                                    {isProcessing ? (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                                            PROCESSANDO...
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center gap-2 group-hover:scale-105 transition-transform">
+                                            FINALIZAR AGORA
+                                            <Zap className="w-5 h-5 fill-current" />
+                                        </div>
+                                    )}
+                                </Button>
+
+                                <div className="mt-8 flex items-center justify-center gap-6 opacity-40 grayscale group-hover:grayscale-0 transition-all">
+                                    <img src="https://logodownload.org/wp-content/uploads/2014/07/visa-logo-1.png" alt="Visa" className="h-3" />
+                                    <img src="https://logodownload.org/wp-content/uploads/2014/07/mastercard-logo-7.png" alt="Master" className="h-4" />
+                                    <img src="https://logodownload.org/wp-content/uploads/2020/02/pix-logo-1.png" alt="Pix" className="h-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
     );
 }
+
+// Sub-components as icons or helper components
+import { Plus, Zap, Barcode, Sparkles } from "lucide-react";

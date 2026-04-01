@@ -46,6 +46,11 @@ export async function checkPermission(permission: string) {
         return true;
     }
 
+    // Lojista pode gerenciar sua própria loja (produtos, pedidos, etc)
+    if (user.role === 'merchant') {
+        return true;
+    }
+
     // Editor pode gerenciar produtos
     if (user.role === 'editor' && permission === PERMISSIONS.MANAGE_PRODUCTS) {
         return true;

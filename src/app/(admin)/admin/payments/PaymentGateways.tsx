@@ -18,7 +18,7 @@ export function PaymentGateways() {
 
     // Store configuration
     const [config, setConfig] = useState({
-        storeName: "",
+        name: "",
         pixKey: "",
         merchantCity: "",
         originZipCode: ""
@@ -34,7 +34,7 @@ export function PaymentGateways() {
 
         if (result.success && result.config) {
             setConfig({
-                storeName: result.config.storeName || "",
+                name: result.config.name || "",
                 pixKey: result.config.pixKey || "",
                 merchantCity: result.config.merchantCity || "",
                 originZipCode: result.config.originZipCode || ""
@@ -64,9 +64,8 @@ export function PaymentGateways() {
         setSaving(true);
 
         const result = await updateStoreConfig({
-            storeName: config.storeName,
+            name: config.name,
             pixKey: pixActive ? config.pixKey : undefined,
-            merchantCity: config.merchantCity,
             originZipCode: config.originZipCode
         });
 
@@ -107,8 +106,8 @@ export function PaymentGateways() {
                             className="w-full text-sm p-2 rounded bg-background border"
                             type="text"
                             placeholder="Ex: Simplify - Loja Online"
-                            value={config.storeName}
-                            onChange={(e) => setConfig({ ...config, storeName: e.target.value })}
+                            value={config.name}
+                            onChange={(e) => setConfig({ ...config, name: e.target.value })}
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">

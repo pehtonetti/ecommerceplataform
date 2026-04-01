@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateShipping } from "@/lib/shipping";
 import { revalidatePath } from "next/cache";
 import { calculatePointsEarned } from "@/lib/loyalty";
+import { getStoreId } from "@/backend/lib/store-context";
 
 interface CheckoutData {
     userId: string;
@@ -19,6 +20,7 @@ interface CheckoutData {
  */
 export async function createOrder(data: CheckoutData) {
     try {
+        const storeId = await getStoreId();
         // 1. Buscar carrinho do usuário
         const cart = await prisma.cart.findUnique({
             where: { userId: data.userId },
@@ -170,6 +172,7 @@ export async function createOrder(data: CheckoutData) {
             // B. Criar o pedido
             const newOrder = await tx.order.create({
                 data: {
+                    storeId,
                     userId: data.userId,
                     addressId: data.addressId,
                     shippingMethod: data.shippingMethod,
@@ -292,8 +295,9 @@ export async function createOrder(data: CheckoutData) {
  */
 export async function getOrderDetails(orderId: string) {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
+        const storeId = await getStoreId();
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, storeId },
             include: {
                 items: {
                     include: {
@@ -328,8 +332,9 @@ export async function getOrderDetails(orderId: string) {
  */
 export async function getUserOrders(userId: string) {
     try {
+        const storeId = await getStoreId();
         const orders = await prisma.order.findMany({
-            where: { userId },
+            where: { userId, storeId },
             include: {
                 items: {
                     include: {
@@ -355,8 +360,9 @@ export async function getUserOrders(userId: string) {
  */
 export async function updateOrderStatus(orderId: string, status: string, trackingCode?: string) {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
+        const storeId = await getStoreId();
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, storeId },
             include: { user: true, items: { include: { product: true } } }
         });
 
@@ -369,8 +375,8 @@ export async function updateOrderStatus(orderId: string, status: string, trackin
         }
 
         // 2. Atualizar o status principal
-        await prisma.order.update({
-            where: { id: orderId },
+        await prisma.order.updateMany({
+            where: { id: orderId, storeId },
             data: { 
                 status,
                 ...(trackingCode ? { trackingCode } : {})
@@ -422,8 +428,9 @@ export async function updateOrderStatus(orderId: string, status: string, trackin
  */
 export async function cancelOrderAndRollback(orderId: string, reason: string) {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
+        const storeId = await getStoreId();
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, storeId },
             include: { items: true }
         });
 
@@ -484,8 +491,8 @@ export async function cancelOrderAndRollback(orderId: string, reason: string) {
         }
 
         // 5. Marca pedido como cancelado
-        await prisma.order.update({
-            where: { id: orderId },
+        await prisma.order.updateMany({
+            where: { id: orderId, storeId },
             data: { status: 'cancelled' }
         });
 
@@ -494,5 +501,27 @@ export async function cancelOrderAndRollback(orderId: string, reason: string) {
     } catch (error) {
         console.error(`❌ Erro no rollback do pedido ${orderId}:`, error);
         return { error: 'Falha no rollback' };
+    }
+}
+
+export async function getMerchantOrders() {
+    try {
+        const storeId = await getStoreId();
+        const orders = await prisma.order.findMany({
+            where: { storeId },
+            include: {
+                user: {
+                    select: { name: true, email: true }
+                },
+                items: {
+                    include: { product: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        return { success: true, orders };
+    } catch (error) {
+        console.error('Erro ao buscar pedidos do lojista:', error);
+        return { error: 'Erro ao buscar pedidos' };
     }
 }

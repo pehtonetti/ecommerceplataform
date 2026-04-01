@@ -7,6 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── MULTI-TENANCY: Store model ───────────────────────────────────────────────
+model Store {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  customDomain    String?  @unique
+  plan            String   @default("free") // free | starter | pro
+  ownerId         String
+  logoUrl         String?
+  faviconUrl      String?
+  primaryColor    String?  @default("#6366f1")
+  theme           String?  @default("minimal")
+  currency        String   @default("BRL")
+  locale          String   @default("pt-BR")
+  originZipCode   String?
+  whatsappNumber  String?
+  pixKey          String?
+  googleAnalyticsId String?
+  facebookPixelId   String?
+  homeLayout      String?  @db.LongText
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  products        Product[]
+  orders          Order[]
+  categories      Category[]
+  banners         Banner[]
+  coupons         Coupon[]
+  emailTemplates  EmailTemplate[]
+  carriers        Carrier[]
+  supportTickets  SupportTicket[]
+  apiKeys         ApiKey[]
+  subscriptions   Subscription[]
+  posts           Post[]
+
+  @@map("store")
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  key       String   @unique
+  name      String   @default("Default Key")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  lastUsed  DateTime?
+
+  @@index([storeId])
+  @@map("apikey")
+}
+
+model Subscription {
+  id               String   @id @default(uuid())
+  storeId          String
+  store            Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  planId           String
+  status           String   @default("active") // active | canceled | past_due
+  stripeId         String?  @unique
+  currentPeriodEnd DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([storeId])
+  @@map("subscription")
+}
+
 model Address {
   id           String   @id @default(uuid())
   userId       String
@@ -46,6 +114,8 @@ model BehavioralLog {
 
 model Carrier {
   id              String   @id @default(uuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name            String
   code            String?
   isActive        Boolean  @default(true)
@@ -54,6 +124,7 @@ model Carrier {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([storeId])
   @@map("carrier")
 }
 
@@ -87,19 +158,25 @@ model CartItem {
 
 model Category {
   id          String    @id @default(uuid())
-  name        String    @unique(map: "Category_name_key")
-  slug        String    @unique(map: "Category_slug_key")
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
   description String?
   imageUrl    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  @@unique([storeId, slug])
+  @@index([storeId])
   @@map("category")
 }
 
 model Coupon {
   id                String    @id @default(uuid())
-  code              String    @unique(map: "Coupon_code_key")
+  storeId           String
+  store             Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  code              String
   description       String?
   discountType      String
   discountValue     Int
@@ -113,18 +190,23 @@ model Coupon {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  @@index([code], map: "Coupon_code_idx")
+  @@unique([storeId, code])
+  @@index([storeId])
   @@map("coupon")
 }
 
 model EmailTemplate {
   id        String   @id @default(uuid())
-  name      String   @unique(map: "EmailTemplate_name_key")
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
   subject   String
   body      String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([storeId, name])
+  @@index([storeId])
   @@map("emailtemplate")
 }
 
@@ -175,6 +257,8 @@ model LoyaltyTransaction {
 
 model Order {
   id                  String      @id @default(uuid())
+  storeId             String
+  store               Store       @relation(fields: [storeId], references: [id])
   userId              String
   addressId           String?
   address             Address?    @relation(fields: [addressId], references: [id])
@@ -200,6 +284,7 @@ model Order {
   invoices            Invoice[]
   user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([storeId])
   @@index([addressId], map: "Order_addressId_idx")
   @@index([couponId], map: "Order_couponId_idx")
   @@index([userId], map: "Order_userId_idx")
@@ -222,6 +307,8 @@ model OrderItem {
 
 model Product {
   id           String         @id @default(uuid())
+  storeId      String
+  store        Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name         String
   description  String         @db.Text
   price        Int
@@ -247,6 +334,7 @@ model Product {
   productViews ProductView[]
   inventoryBatches InventoryBatch[]
 
+  @@index([storeId])
   @@map("product")
 }
 
@@ -298,6 +386,8 @@ model Review {
   @@map("review")
 }
 
+// StoreConfig is now superseded by Store model.
+// Kept temporarily for backwards-compat during migration.
 model StoreConfig {
   id              String   @id @default(uuid())
   storeName       String
@@ -315,6 +405,8 @@ model StoreConfig {
 
 model SupportTicket {
   id         String   @id @default(uuid())
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   userId     String?
   subject    String
   message    String   @db.Text
@@ -326,6 +418,7 @@ model SupportTicket {
   updatedAt  DateTime @updatedAt
   user       User?    @relation(fields: [userId], references: [id])
 
+  @@index([storeId])
   @@index([userId], map: "SupportTicket_userId_idx")
   @@map("supportticket")
 }
@@ -334,6 +427,7 @@ model User {
   id            String   @id @default(uuid())
   name          String
   email         String   @unique(map: "User_email_key")
+  phone         String?
   document      String?
   password      String
   avatarUrl     String?  @db.Text
@@ -372,6 +466,8 @@ model WishlistItem {
 
 model Banner {
   id          String   @id @default(uuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   title       String
   subtitle    String?
   imageUrl    String
@@ -381,7 +477,7 @@ model Banner {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([active])
+  @@index([storeId, active])
   @@map("banner")
 }
 
@@ -400,4 +496,22 @@ model InventoryBatch {
 
   @@index([productId])
   @@map("inventorybatch")
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  title     String
+  slug      String
+  content   String   @db.LongText
+  imageUrl  String?
+  author    String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, slug])
+  @@index([storeId])
+  @@map("post")
 }

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export async function createCarrier(formData: FormData) {
     const name = formData.get("name") as string;
@@ -11,8 +12,10 @@ export async function createCarrier(formData: FormData) {
     if (!name) return { error: "Nome obrigatório" };
 
     try {
+        const storeId = await getStoreId();
         await prisma.carrier.create({
             data: {
+                storeId,
                 name,
                 calculateApiUrl,
                 apiKey,
@@ -28,8 +31,9 @@ export async function createCarrier(formData: FormData) {
 
 export async function toggleCarrierStatus(id: string, currentStatus: boolean) {
     try {
-        await prisma.carrier.update({
-            where: { id },
+        const storeId = await getStoreId();
+        await prisma.carrier.updateMany({
+            where: { id, storeId },
             data: { isActive: !currentStatus }
         });
         revalidatePath("/admin/shipping");
@@ -41,8 +45,9 @@ export async function toggleCarrierStatus(id: string, currentStatus: boolean) {
 
 export async function deleteCarrier(id: string) {
     try {
-        await prisma.carrier.delete({
-            where: { id }
+        const storeId = await getStoreId();
+        await prisma.carrier.deleteMany({
+            where: { id, storeId }
         });
         revalidatePath("/admin/shipping");
         return { success: true };
@@ -94,8 +99,9 @@ export async function calculateCartShipping(userId: string, zipCode: string) {
         })));
 
         // Buscar CEP de origem das configurações da loja
-        const storeConfig = await prisma.storeConfig.findFirst();
-        const fromZipCode = storeConfig?.originZipCode || "01310-100";
+        const storeId = await getStoreId();
+        const store = await prisma.store.findUnique({ where: { id: storeId } });
+        const fromZipCode = store?.originZipCode || "01310-100";
 
         const quotes = await calculateShipping({
             fromZipCode,
@@ -112,11 +118,12 @@ export async function calculateCartShipping(userId: string, zipCode: string) {
 
 export async function calculateProductShipping(productId: string, zipCode: string, quantity: number = 1) {
     try {
+        const storeId = await getStoreId();
         const product = await prisma.product.findUnique({
             where: { id: productId }
         });
 
-        if (!product) return { error: "Produto não encontrado" };
+        if (!product || product.storeId !== storeId) return { error: "Produto não encontrado" };
 
         const { calculateShipping, calculateCartDimensions } = await import("@/lib/shipping");
 
@@ -129,8 +136,8 @@ export async function calculateProductShipping(productId: string, zipCode: strin
             quantity
         }]);
 
-        const storeConfig = await prisma.storeConfig.findFirst();
-        const fromZipCode = storeConfig?.originZipCode || "01310-100";
+        const store = await prisma.store.findUnique({ where: { id: storeId } });
+        const fromZipCode = store?.originZipCode || "01310-100";
         const quotes = await calculateShipping({
             fromZipCode,
             toZipCode: zipCode,

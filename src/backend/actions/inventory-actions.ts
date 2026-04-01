@@ -2,16 +2,21 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export async function updateStock(productId: string, newStock: number) {
     if (newStock < 0) return;
 
-    await prisma.product.update({
-        where: { id: productId },
+    const storeId = await getStoreId();
+
+    // Verificação de segurança: O produto deve pertencer à loja atual
+    await prisma.product.updateMany({
+        where: { id: productId, storeId },
         data: { stock: newStock }
     });
 
     revalidatePath('/admin/inventory');
+    revalidatePath('/dashboard/inventory'); // Dashboard do lojista
 }
 
 export async function addInventoryBatch(formData: FormData) {
@@ -21,8 +26,19 @@ export async function addInventoryBatch(formData: FormData) {
     const costPrice = parseFloat(formData.get('costPrice')?.toString() || "0");
     const supplierName = formData.get('supplierName')?.toString() || null;
     
+    const storeId = await getStoreId();
+    
     if (!productId || !batchCode || initialQuantity <= 0) {
         throw new Error("Dados inválidos. Preencha Produto, Lote e Quantidade (maior que 0).");
+    }
+
+    // Verificar se o produto pertence à loja
+    const product = await prisma.product.findFirst({
+        where: { id: productId, storeId }
+    });
+
+    if (!product) {
+        throw new Error("Produto não encontrado nesta loja.");
     }
 
     // Registrar o novo lote
@@ -53,19 +69,28 @@ export async function addInventoryBatch(formData: FormData) {
 }
 
 export async function getInventoryBatches(productId?: string) {
+    const storeId = await getStoreId();
+    
     return await prisma.inventoryBatch.findMany({
-        where: productId ? { productId } : undefined,
+        where: {
+            productId: productId ? productId : undefined,
+            product: { storeId } // Garante que só vemos lotes de produtos DESTA loja
+        },
         include: { product: { select: { name: true, price: true } } },
         orderBy: { createdAt: 'desc' }
     });
 }
 
-// Função FIFO (First in First out) para baixa de estoque
 export async function consumeStockFIFO(productId: string, quantityToConsume: number) {
+    const storeId = await getStoreId();
     let remainingToConsume = quantityToConsume;
     
     const activeBatches = await prisma.inventoryBatch.findMany({
-        where: { productId, availableStock: { gt: 0 } },
+        where: { 
+            productId, 
+            availableStock: { gt: 0 },
+            product: { storeId }
+        },
         orderBy: { createdAt: 'asc' } // Lote mais antigo primeiro
     });
 
@@ -88,12 +113,15 @@ export async function consumeStockFIFO(productId: string, quantityToConsume: num
 
     // Sync do estoque total dinamicamente
     const totalStock = await prisma.inventoryBatch.aggregate({
-        where: { productId },
+        where: { 
+            productId,
+            product: { storeId }
+        },
         _sum: { availableStock: true }
     });
 
-    await prisma.product.update({
-        where: { id: productId },
+    await prisma.product.updateMany({
+        where: { id: productId, storeId },
         data: { stock: totalStock._sum.availableStock || 0 }
     });
 }

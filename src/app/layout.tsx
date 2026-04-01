@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { WhatsAppButton } from "@/frontend/components/WhatsAppButton";
@@ -10,16 +9,6 @@ import { CompareProvider } from "@/frontend/contexts/CompareContext";
 import { CartProvider } from "@/frontend/contexts/CartContext";
 import { CompareDrawer } from "@/frontend/components/ui/CompareDrawer";
 import { MobileNav } from "@/frontend/components/ui/MobileNav";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://simplifytech.eu'),
@@ -83,22 +72,33 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+import { getStoreContext } from '@/backend/lib/store-context';
+import { StoreThemeProvider } from '@/frontend/components/StoreThemeProvider';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   // Fetch initial cart state server-side to avoid hydration mismatch
-  // Dynamic import if needed or regular import if actions are compatible
   const { getCart } = await import('@/backend/actions/cart-actions');
   const cartData = await getCart();
+  
+  // Obter o contexto visual da Loja (Primary Color e Tema)
+  const storeContext = await getStoreContext().catch(() => null);
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-primary selection:text-white`}
+        className={`antialiased selection:bg-primary selection:text-white font-sans`}
         suppressHydrationWarning
       >
+        {/* Injeta as variáveis de cor (CSS Root) relativas à Loja logada/acessada */}
+        <StoreThemeProvider 
+          primaryColor={storeContext?.primaryColor} 
+          themeType={storeContext?.theme || 'minimal'} 
+        />
+
         <CartProvider initialCart={cartData?.cart}>
           <CompareProvider>
             {children}

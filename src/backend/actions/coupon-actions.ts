@@ -1,10 +1,12 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { getStoreId } from "@/backend/lib/store-context";
 
 export async function validateCoupon(code: string, subtotal: number) {
+    const storeId = await getStoreId();
     const coupon = await prisma.coupon.findUnique({
-        where: { code }
+        where: { storeId_code: { storeId, code } }
     });
 
     if (!coupon) {
@@ -31,8 +33,9 @@ export async function validateCoupon(code: string, subtotal: number) {
 }
 
 export async function incrementCouponUsage(couponId: string) {
-    await prisma.coupon.update({
-        where: { id: couponId },
+    const storeId = await getStoreId();
+    await prisma.coupon.updateMany({
+        where: { id: couponId, storeId },
         data: { usesCount: { increment: 1 } }
     });
 }
