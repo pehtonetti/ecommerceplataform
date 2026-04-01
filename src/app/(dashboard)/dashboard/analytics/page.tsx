@@ -11,18 +11,40 @@ import { Button } from "@/frontend/components/ui/Button";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 import { motion } from "framer-motion";
 
+interface SalesHistoryItem {
+    name: string;
+    vendas: number;
+}
+
+interface TopProduct {
+    name: string;
+    vendas: number;
+}
+
+interface AnalyticsData {
+    stats: {
+        revenue: number;
+        orders: number;
+        views: number;
+        conversion: number | string;
+    };
+    salesHistory: SalesHistoryItem[];
+    topProducts: TopProduct[];
+}
+
 export default function AnalyticsPage() {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         getAnalyticsData().then(res => {
-            setData(res);
+            setData(res as any);
             setIsLoading(false);
         });
     }, []);
 
     if (isLoading) return <div className="p-20 text-center font-black animate-pulse uppercase tracking-widest opacity-40">Processando Inteligência de Dados...</div>;
+    if (!data) return null;
 
     const stats = [
         { label: "Faturamento Bruto", value: `R$ ${data.stats.revenue.toLocaleString()}`, icon: TrendingUp, trend: "+12.5%", color: "indigo" },

@@ -1,9 +1,7 @@
-node_modules
-.next
-out
-build
-dist
-services
-prisma/seed.ts
-prisma/seed-apple.ts
-prisma/seed-apple.js
+public/*.js
+public/sw.js
+public/workbox-*.js
+.next/*
+node_modules/*
+dist/*
+build/*

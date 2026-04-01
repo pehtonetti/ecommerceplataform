@@ -21,8 +21,8 @@ export function RestockButton({ product }: { product: { id: string, name: string
             await addInventoryBatch(formData);
             toast.success("Lote de estoque registrado com sucesso!");
             setIsOpen(false);
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao registrar lote");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Erro ao registrar lote");
         } finally {
             setLoading(false);
         }

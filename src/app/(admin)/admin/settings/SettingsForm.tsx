@@ -8,7 +8,13 @@ import { updateStoreConfig } from "@/backend/actions/store-config-actions";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-export function SettingsForm({ initialData }: { initialData: any }) {
+interface SettingsData {
+    name?: string;
+    pixKey?: string;
+    merchantCity?: string;
+}
+
+export function SettingsForm({ initialData }: { initialData: SettingsData }) {
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

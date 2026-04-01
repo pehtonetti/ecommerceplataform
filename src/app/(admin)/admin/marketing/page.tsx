@@ -34,8 +34,7 @@ export default function MarketingPage() {
         try {
             const result = await getMarketingCustomers();
             if (result.success && result.customers) {
-                // @ts-ignore - Date conversion if needed
-                setCustomers(result.customers);
+                setCustomers(result.customers as Customer[]);
             } else {
                 toast.error(result.error || "Erro ao carregar clientes");
             }

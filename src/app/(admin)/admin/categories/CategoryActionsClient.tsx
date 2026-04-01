@@ -23,8 +23,8 @@ export function CategoryActionsClient({ category }: { category: Category }) {
             await updateCategory(category.id, formData);
             toast.success("Categoria atualizada com sucesso!");
             setIsEditOpen(false);
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao atualizar categoria");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Erro ao atualizar categoria");
         } finally {
             setLoading(false);
         }
@@ -36,8 +36,8 @@ export function CategoryActionsClient({ category }: { category: Category }) {
             await deleteCategory(category.id);
             toast.success("Categoria removida com sucesso!");
             setIsDeleteOpen(false);
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao excluir categoria");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Erro ao excluir categoria");
         } finally {
             setLoading(false);
         }

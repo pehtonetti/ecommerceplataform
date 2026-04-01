@@ -207,7 +207,7 @@ export default function BannersPage() {
             <div className="grid gap-6">
                 {banners.length === 0 ? (
                     <div className="text-center py-20 glass rounded-2xl border border-dashed border-border text-muted-foreground">
-                        Nenhum banner cadastrado. Clique em "Novo Banner" para começar.
+                        Nenhum banner cadastrado. Clique em &quot;Novo Banner&quot; para começar.
                     </div>
                 ) : (
                     banners.map((banner, index) => (

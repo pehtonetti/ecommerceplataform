@@ -56,7 +56,7 @@ export default async function AdminStoresPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {stores.map((store: any) => (
+                        {stores.map((store) => (
                             <tr key={store.id} className="border-b border-gray-50 dark:border-zinc-900 last:border-0 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors duration-150">
                                 <td className="p-4">
                                     <div className="font-semibold text-gray-900 dark:text-white">{store.name}</div>
