@@ -24,10 +24,6 @@ export function PaymentGateways() {
         originZipCode: ""
     });
 
-    useEffect(() => {
-        loadConfig();
-    }, []);
-
     const loadConfig = async () => {
         setLoading(true);
         const result = await getStoreConfig();
@@ -48,6 +44,10 @@ export function PaymentGateways() {
 
         setLoading(false);
     };
+
+    useEffect(() => {
+        loadConfig();
+    }, []);
 
     const handleSave = async () => {
         // Valida se PIX está ativo mas sem chave

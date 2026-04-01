@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { getAnalyticsData } from "@/backend/actions/analytics-actions";
 import { 
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    BarChart, Bar, Cell, AreaChart, Area 
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+    AreaChart, Area 
 } from "recharts";
 import { TrendingUp, ShoppingBag, Eye, Percent, ArrowUpRight, ArrowDownRight, Filter, Download, ArrowRight } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
 
     useEffect(() => {
         getAnalyticsData().then(res => {
-            setData(res as any);
+            setData(res as AnalyticsData);
             setIsLoading(false);
         });
     }, []);
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
                                     dataKey="name" 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#888', textTransform: 'uppercase' }} 
+                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#888' }} 
                                     dy={10}
                                 />
                                 <YAxis 
@@ -141,7 +141,7 @@ export default function AnalyticsPage() {
                 <div className="glass p-10 rounded-[48px] border border-border/50 bg-white/40 dark:bg-zinc-900/40">
                     <h3 className="text-xl font-black tracking-tightest uppercase mb-10">Produtos Top Vendedores</h3>
                     <div className="space-y-8">
-                        {data.topProducts.map((p: any, i: number) => (
+                        {data.topProducts.map((p: TopProduct, i: number) => (
                             <div key={i} className="flex items-center gap-6 group">
                                 <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-black text-xs text-muted-foreground group-hover:bg-indigo-500 group-hover:text-white transition-all">
                                     0{i + 1}
@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
 
                     <div className="mt-10 p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
                         <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-2">Insight de Inteligência</p>
-                        <p className="text-xs font-medium leading-relaxed opacity-60 italic">"Seu item '{data.topProducts[0]?.name}' representa 42% das suas vendas totais. Considere criar um pacote 'Buy Together' para aumentar o ticket médio."</p>
+                        <p className="text-xs font-medium leading-relaxed opacity-60 italic">&quot;Seu item &apos;{data.topProducts[0]?.name}&apos; representa 42% das suas vendas totais. Considere criar um pacote &apos;Buy Together&apos; para aumentar o ticket médio.&quot;</p>
                     </div>
                 </div>
             </div>

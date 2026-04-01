@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, ShoppingBag, User, ArrowRightLeft } from "lucide-react";
@@ -13,7 +13,7 @@ export function MobileNav() {
     const { cart } = useCart();
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setMounted(true);
     }, []);
 

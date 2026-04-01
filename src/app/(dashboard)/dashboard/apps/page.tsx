@@ -14,21 +14,37 @@ import {
     ShieldCheck
 } from 'lucide-react';
 
+interface StoreConfig {
+    whatsappNumber: string | null;
+    googleAnalyticsId: string | null;
+    facebookPixelId: string | null;
+}
+
 export default function AppsPage() {
-    const [config, setConfig] = useState<any>(null);
+    const [config, setConfig] = useState<StoreConfig>({
+        whatsappNumber: '',
+        googleAnalyticsId: '',
+        facebookPixelId: ''
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    async function loadConfig() {
+        const res = await getStoreConfig();
+        if (res.success && res.config) {
+            setConfig({
+                whatsappNumber: res.config.whatsappNumber || '',
+                googleAnalyticsId: res.config.googleAnalyticsId || '',
+                facebookPixelId: res.config.facebookPixelId || ''
+            });
+        }
+        setIsLoading(false);
+    }
+
     useEffect(() => {
         loadConfig();
     }, []);
-
-    async function loadConfig() {
-        const res = await getStoreConfig();
-        if (res.success) setConfig(res.config);
-        setIsLoading(false);
-    }
 
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
@@ -36,9 +52,9 @@ export default function AppsPage() {
         setMessage(null);
 
         const res = await updateStoreConfig({
-            whatsappNumber: config.whatsappNumber,
-            googleAnalyticsId: config.googleAnalyticsId,
-            facebookPixelId: config.facebookPixelId
+            whatsappNumber: config.whatsappNumber ?? undefined,
+            googleAnalyticsId: config.googleAnalyticsId ?? undefined,
+            facebookPixelId: config.facebookPixelId ?? undefined
         });
 
         if (res.success) {
@@ -90,7 +106,7 @@ export default function AppsPage() {
                                 <Input 
                                     placeholder="Ex: 11999999999" 
                                     value={config?.whatsappNumber || ''} 
-                                    onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})}
+                                    onChange={(e) => setConfig(prev => ({...prev, whatsappNumber: e.target.value}))}
                                     className="rounded-xl border-border/60"
                                 />
                             </div>
@@ -112,7 +128,7 @@ export default function AppsPage() {
                                 <Input 
                                     placeholder="G-BXXXXXXX" 
                                     value={config?.googleAnalyticsId || ''} 
-                                    onChange={(e) => setConfig({...config, googleAnalyticsId: e.target.value})}
+                                    onChange={(e) => setConfig(prev => ({...prev, googleAnalyticsId: e.target.value}))}
                                     className="rounded-xl border-border/60"
                                 />
                             </div>
@@ -138,7 +154,7 @@ export default function AppsPage() {
                                 <Input 
                                     placeholder="123456789012345" 
                                     value={config?.facebookPixelId || ''} 
-                                    onChange={(e) => setConfig({...config, facebookPixelId: e.target.value})}
+                                    onChange={(e) => setConfig(prev => ({...prev, facebookPixelId: e.target.value}))}
                                     className="rounded-xl border-border/60"
                                 />
                             </div>
@@ -183,7 +199,7 @@ export default function AppsPage() {
     );
 }
 
-function Sparkles(props: any) {
+function Sparkles(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             {...props}

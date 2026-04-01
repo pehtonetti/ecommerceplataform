@@ -9,31 +9,32 @@ export default function HomePage() {
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    // Public IP (falls back to unavailable on error)
+    // Public IP
     fetch("https://api.ipify.org?format=json")
       .then((res) => res.json())
       .then((data) => setIp(data.ip))
       .catch(() => setIp("Unavailable"));
+  }, []);
 
-    // Read cart from localStorage (example key: "cart")
-    try {
-      const raw = localStorage.getItem("cart");
-      if (raw) {
-        const items = JSON.parse(raw);
-        setCartCount(Array.isArray(items) ? items.length : 0);
+  useEffect(() => {
+    // Read cart from localStorage
+    const updateCart = () => {
+      try {
+        const raw = localStorage.getItem("cart");
+        if (raw) {
+          const items = JSON.parse(raw);
+          setCartCount(Array.isArray(items) ? items.length : 0);
+        }
+      } catch {
+        setCartCount(0);
       }
-    } catch (e) {
-      setCartCount(0);
-    }
+    };
+
+    updateCart();
 
     const onStorage = (e: StorageEvent) => {
       if (e.key === "cart") {
-        try {
-          const items = e.newValue ? JSON.parse(e.newValue) : [];
-          setCartCount(Array.isArray(items) ? items.length : 0);
-        } catch {
-          setCartCount(0);
-        }
+        updateCart();
       }
     };
 

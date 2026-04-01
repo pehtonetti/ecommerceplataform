@@ -7,23 +7,30 @@ import { toast } from "sonner";
 import { getApiKeys, createApiKey, deleteApiKey } from "@/backend/actions/api-actions";
 import { FadeIn } from "@/frontend/components/ui/Motion";
 
+interface ApiKey {
+    id: string;
+    name: string;
+    key: string;
+    createdAt: string | Date;
+}
+
 export default function ApiSettingsPage() {
-    const [keys, setKeys] = useState<any[]>([]);
+    const [keys, setKeys] = useState<ApiKey[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newKeyName, setNewKeyName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [lastCreatedKey, setLastCreatedKey] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadKeys();
-    }, []);
-
     async function loadKeys() {
         setIsLoading(true);
         const data = await getApiKeys();
-        setKeys(data);
+        setKeys(data as ApiKey[]);
         setIsLoading(false);
     }
+
+    useEffect(() => {
+        loadKeys();
+    }, []);
 
     async function handleCreate() {
         if (!newKeyName) return toast.error("Dê um nome para a chave");

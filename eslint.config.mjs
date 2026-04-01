@@ -11,10 +11,17 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "dist/**",
+    "node_modules/**",
+    "public/*.js",
+    "public/sw.js",
+    "public/workbox-*.js",
+    "public/swe-worker-*.js",
     "next-env.d.ts",
     "services/**",
     "prisma/seed-*.js",
     "prisma/seed-*.ts",
+    "tmp/**",
   ]),
 ]);
 

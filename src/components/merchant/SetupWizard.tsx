@@ -24,50 +24,53 @@ interface SetupStep {
 }
 
 interface SetupWizardProps {
-    store: any;
-    stats: any;
+    store: {
+        name?: string;
+        primaryColor?: string;
+        pixKey?: string;
+    };
+    stats: {
+        products?: {
+            total: number;
+        };
+    };
 }
 
 export function SetupWizard({ store, stats }: SetupWizardProps) {
-    const [steps, setSteps] = useState<SetupStep[]>([]);
-    
-    useEffect(() => {
-        const checkSteps = [
-            {
-                id: 'name',
-                title: 'Nomeie sua loja',
-                description: 'Defina o nome e a identidade da sua marca.',
-                href: '/dashboard/settings',
-                icon: <Store className="w-5 h-5" />,
-                isCompleted: !!store.name && store.name !== 'Minha Loja'
-            },
-            {
-                id: 'product',
-                title: 'Adicione seu primeiro produto',
-                description: 'Cadastre o que você vai vender hoje.',
-                href: '/dashboard/products/new',
-                icon: <Package className="w-5 h-5" />,
-                isCompleted: (stats.products?.total || 0) > 0
-            },
-            {
-                id: 'theme',
-                title: 'Personalize as cores',
-                description: 'Deixe a loja com a cara da sua marca.',
-                href: '/dashboard/settings/appearance',
-                icon: <Palette className="w-5 h-5" />,
-                isCompleted: !!store.primaryColor && store.primaryColor !== '#6366f1'
-            },
-            {
-                id: 'payment',
-                title: 'Configure o pagamento',
-                description: 'Ative o PIX para receber suas vendas.',
-                href: '/dashboard/settings/payments',
-                icon: <CreditCard className="w-5 h-5" />,
-                isCompleted: !!store.pixKey
-            }
-        ];
-        setSteps(checkSteps);
-    }, [store, stats]);
+    const steps: SetupStep[] = [
+        {
+            id: 'name',
+            title: 'Nomeie sua loja',
+            description: 'Defina o nome e a identidade da sua marca.',
+            href: '/dashboard/settings',
+            icon: <Store className="w-5 h-5" />,
+            isCompleted: !!store?.name && store?.name !== 'Minha Loja'
+        },
+        {
+            id: 'product',
+            title: 'Adicione seu primeiro produto',
+            description: 'Cadastre o que você vai vender hoje.',
+            href: '/dashboard/products/new',
+            icon: <Package className="w-5 h-5" />,
+            isCompleted: (stats?.products?.total || 0) > 0
+        },
+        {
+            id: 'theme',
+            title: 'Personalize as cores',
+            description: 'Deixe a loja com a cara da sua marca.',
+            href: '/dashboard/settings/appearance',
+            icon: <Palette className="w-5 h-5" />,
+            isCompleted: !!store?.primaryColor && store?.primaryColor !== '#6366f1'
+        },
+        {
+            id: 'payment',
+            title: 'Configure o pagamento',
+            description: 'Ative o PIX para receber suas vendas.',
+            href: '/dashboard/settings/payments',
+            icon: <CreditCard className="w-5 h-5" />,
+            isCompleted: !!store?.pixKey
+        }
+    ];
 
     const completedCount = steps.filter(s => s.isCompleted).length;
     const progress = (completedCount / steps.length) * 100;

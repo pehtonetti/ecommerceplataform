@@ -5,14 +5,46 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CreditCard, MapPin, Truck, ShieldCheck, CheckCircle2, ChevronRight, Tag, Ticket } from "lucide-react";
+import { CreditCard, MapPin, Truck, ShieldCheck, CheckCircle2, ChevronRight, Tag, Ticket, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/frontend/components/ui/Button";
 import { createAddress, checkoutOrder, validateCoupon } from "@/backend/actions/checkout-actions";
 
+interface CartItem {
+    id: string;
+    quantity: number;
+    product: {
+        id: string;
+        name: string;
+        price: number;
+        imageUrl: string | null;
+    };
+}
+
 interface CheckoutClientProps {
-    cart: any;
-    user: any;
-    addresses: any[];
+    cart: {
+        items: CartItem[];
+    };
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        document?: string;
+    } | null;
+    addresses: Array<{
+        id: string;
+        label?: string;
+        street: string;
+        number: string;
+        city: string;
+        state: string;
+    }>;
+}
+
+interface Coupon {
+    id: string;
+    code: string;
+    discountType: string;
+    discountValue: number;
 }
 
 export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
@@ -25,7 +57,7 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
 
     // Coupon State
     const [couponCode, setCouponCode] = useState("");
-    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
     // Mock Card Data
@@ -37,7 +69,7 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
     });
 
     const items = cart.items;
-    const subtotal = items.reduce((acc: number, item: any) => acc + (item.product.price * item.quantity), 0);
+    const subtotal = items.reduce((acc: number, item: CartItem) => acc + (item.product.price * item.quantity), 0);
     const shippingCost = 2500;
 
     let discountAmount = 0;
@@ -232,7 +264,7 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
 
                         <div className="space-y-6">
                             <div className="space-y-4 max-h-[200px] overflow-y-auto custom-scrollbar pr-2 mb-6">
-                                {items.map((item: any) => (
+                                {items.map((item: CartItem) => (
                                     <div key={item.id} className="flex gap-4 items-center border-b border-white/10 pb-4">
                                         <div className="relative w-14 h-14 bg-white/5 rounded-2xl overflow-hidden flex-shrink-0">
                                             {item.product.imageUrl && <Image src={item.product.imageUrl} alt={item.product.name} fill className="object-cover scale-110" />}
@@ -310,5 +342,4 @@ export function CheckoutClient({ cart, user, addresses }: CheckoutClientProps) {
     );
 }
 
-// Sub-components as icons or helper components
-import { Plus, Zap, Barcode, Sparkles } from "lucide-react";
+import { Plus, Barcode } from "lucide-react";
