@@ -5,8 +5,10 @@ import { getAiRecommendations } from "@/backend/actions/ai-actions";
 import ProductSection from "../ProductSection";
 import { Sparkles } from "lucide-react";
 
+import type { Product } from "@/backend/types";
+
 export function AiProductRecommendations() {
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

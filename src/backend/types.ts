@@ -19,7 +19,7 @@ export interface Product {
     category: string;
     stock: number;
     active: boolean;
-    createdAt: string;
+    createdAt: Date | string;
     videoUrl?: string | null;
     images?: Array<{ url: string }>;
     colors?: any; // JSON

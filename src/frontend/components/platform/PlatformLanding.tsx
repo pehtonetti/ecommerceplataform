@@ -3,12 +3,12 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, LayoutTemplate, Palette, Rocket, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState, useEffect } from 'react';
 
 export default function PlatformLanding() {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
 

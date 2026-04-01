@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, X, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
-import { getCart, removeFromCart, updateCartItemQuantity } from "@/backend/actions/cart-actions";
 import { Button } from "./Button";
 import Link from "next/link";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCart } from "@/frontend/contexts/CartContext";
+import type { Product } from "@/backend/types";
+
+interface CartItemWithProduct {
+    id: string;
+    product: Product;
+    quantity: number;
+}
 
 export function MiniCart() {
     const { cart, isOpen, openCart, closeCart, removeFromCart, updateQuantity, isLoading } = useCart();
@@ -18,10 +23,10 @@ export function MiniCart() {
     // Wait, the button triggers 'openCart'.
     // The previous implementation had 'setIsOpen'.
 
-    const subtotal = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.price * item.quantity), 0) || 0;
+    const subtotal = cart?.items?.reduce((acc: number, item: CartItemWithProduct) => acc + (item.product.price * item.quantity), 0) || 0;
 
     const [mounted, setMounted] = useState(false);
-    useEffect(() => {
+    useLayoutEffect(() => {
         setMounted(true);
     }, []);
 
@@ -87,10 +92,15 @@ export function MiniCart() {
                                             <Button variant="outline" className="mt-4" onClick={closeCart}>Começar a Comprar</Button>
                                         </div>
                                     ) : (
-                                        cart.items.map((item: any) => (
+                                        cart.items.map((item: CartItemWithProduct) => (
                                             <div key={item.id} className="flex gap-4 group">
                                                 <div className="w-20 h-20 rounded-xl overflow-hidden border border-border flex-shrink-0 relative">
-                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                    <Image 
+                                                        src={item.product.imageUrl} 
+                                                        alt={item.product.name} 
+                                                        fill
+                                                        className="object-cover" 
+                                                    />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-sm truncate">{item.product.name}</p>
