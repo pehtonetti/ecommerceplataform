@@ -10,9 +10,16 @@ export async function middleware(request: NextRequest) {
     const hostname = request.headers.get('host') ?? '';
     const host = hostname.split(':')[0]; // strip port
 
+    // ── Landing page redirect: domínio principal → /home ─────────────────────
+    // Em localhost (dev) ou no domínio raiz da plataforma, redireciona / para /home
+    if (pathname === '/') {
+        const isStoreDomain = host.endsWith(`.${PLATFORM_DOMAIN}`) && PLATFORM_DOMAIN !== 'localhost';
+        if (!isStoreDomain) {
+            return NextResponse.redirect(new URL('/home', request.url));
+        }
+    }
+
     // ── Resolve store slug from hostname and inject as header ──────────────────
-    // This runs at the Edge, so we can't hit the DB — we just extract the slug.
-    // The server-side store-context.ts helper will do the DB lookup using this slug.
     let storeSlug: string | null = null;
     if (host.endsWith(`.${PLATFORM_DOMAIN}`) && PLATFORM_DOMAIN !== 'localhost') {
         storeSlug = host.replace(`.${PLATFORM_DOMAIN}`, '');
@@ -78,6 +85,7 @@ export async function middleware(request: NextRequest) {
 // Matcher covering all sensitive project routes
 export const config = {
     matcher: [
+        '/',
         '/admin/:path*',
         '/dashboard/:path*',
         '/account/:path*',

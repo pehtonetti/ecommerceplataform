@@ -13,7 +13,7 @@ export async function createPaymentSession(orderId: string) {
         const result = await getOrderDetails(orderId);
 
         if (result.error || !result.order) {
-            return { error: 'Pedido não encontrado' };
+            return { success: false, error: 'Pedido não encontrado' };
         }
 
         const { order } = result;
@@ -29,7 +29,7 @@ export async function createPaymentSession(orderId: string) {
         return { success: true, sessionUrl: session.url };
     } catch (error) {
         console.error('Erro ao criar sessão de pagamento:', error);
-        return { error: 'Erro ao processar pagamento' };
+        return { success: false, error: 'Erro ao processar pagamento' };
     }
 }
 
@@ -42,7 +42,7 @@ export async function generatePixPayment(orderId: string) {
         const result = await getOrderDetails(orderId);
 
         if (result.error || !result.order) {
-            return { error: 'Pedido não encontrado' };
+            return { success: false, error: 'Pedido não encontrado' };
         }
 
         const { order } = result;
@@ -51,7 +51,7 @@ export async function generatePixPayment(orderId: string) {
         const storeConfig = await prisma.storeConfig.findFirst();
 
         if (!storeConfig?.pixKey) {
-            return { error: 'Chave PIX não configurada. Entre em contato com o suporte.' };
+            return { success: false, error: 'Chave PIX não configurada. Entre em contato com o suporte.' };
         }
 
         // Gerar descrição com nomes dos produtos
@@ -105,7 +105,7 @@ export async function generatePixPayment(orderId: string) {
         };
     } catch (error) {
         console.error('Erro ao gerar PIX:', error);
-        return { error: 'Erro ao gerar QR Code PIX' };
+        return { success: false, error: 'Erro ao gerar QR Code PIX' };
     }
 }
 
@@ -127,7 +127,7 @@ export async function checkPixPaymentStatus(orderId: string) {
         });
 
         if (!order) {
-            return { error: 'Pedido não encontrado' };
+            return { success: false, error: 'Pedido não encontrado' };
         }
 
         // Verifica se expirou
@@ -152,7 +152,7 @@ export async function checkPixPaymentStatus(orderId: string) {
         };
     } catch (error) {
         console.error('Erro ao verificar status PIX:', error);
-        return { error: 'Erro ao verificar pagamento' };
+        return { success: false, error: 'Erro ao verificar pagamento' };
     }
 }
 
@@ -176,12 +176,12 @@ export async function confirmPixPayment(orderId: string, txId?: string) {
         });
 
         if (!order) {
-            return { error: 'Pedido não encontrado' };
+            return { success: false, error: 'Pedido não encontrado' };
         }
 
         // Verifica se já foi pago
         if (order.status === 'paid' || order.status === 'processing') {
-            return { error: 'Pedido já foi confirmado' };
+            return { success: false, error: 'Pedido já foi confirmado' };
         }
 
         // Atualiza o pedido para 'processing' (pagamento confirmado, aguardando separação)
@@ -217,6 +217,6 @@ export async function confirmPixPayment(orderId: string, txId?: string) {
         return { success: true, message: 'Pagamento confirmado com sucesso' };
     } catch (error) {
         console.error('Erro ao confirmar pagamento PIX:', error);
-        return { error: 'Erro ao confirmar pagamento' };
+        return { success: false, error: 'Erro ao confirmar pagamento' };
     }
 }

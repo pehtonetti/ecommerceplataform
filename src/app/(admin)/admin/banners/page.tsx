@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { FadeIn } from "@/frontend/components/ui/Motion";
-import { Save, Plus, Trash2, Edit2, Check, X, MoveUp, MoveDown, Image as ImageIcon, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Link as LinkIcon, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
@@ -38,7 +38,7 @@ export default function BannersPage() {
                 const data = await res.json();
                 setBanners(data);
             }
-        } catch (error) {
+        } catch {
             toast.error('Erro ao carregar banners');
         } finally {
             setLoading(false);
@@ -71,7 +71,7 @@ export default function BannersPage() {
             } else {
                 toast.error('Erro ao salvar banner');
             }
-        } catch (error) {
+        } catch {
             toast.error('Erro de rede');
         } finally {
             setIsSaving(false);
@@ -87,7 +87,7 @@ export default function BannersPage() {
                 toast.success('Banner excluído');
                 fetchBanners();
             }
-        } catch (error) {
+        } catch {
             toast.error('Erro ao excluir');
         }
     };
@@ -102,7 +102,7 @@ export default function BannersPage() {
             if (res.ok) {
                 fetchBanners();
             }
-        } catch (error) {
+        } catch {
             toast.error('Erro ao atualizar status');
         }
     };
@@ -181,11 +181,12 @@ export default function BannersPage() {
 
                                 {editingBanner.imageUrl && (
                                     <div className="relative aspect-[3/1] rounded-lg overflow-hidden border border-border bg-black/5">
-                                        <img 
+                                        <Image 
                                             src={editingBanner.imageUrl} 
                                             alt="Preview" 
-                                            className="object-contain w-full h-full"
-                                            onError={(e) => (e.currentTarget.src = 'https://placehold.co/1200x400?text=Erro+na+Imagem')}
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
                                         />
                                     </div>
                                 )}
@@ -216,10 +217,12 @@ export default function BannersPage() {
                                 <div className="flex flex-col md:flex-row gap-6 items-center">
                                     {/* Preview Container */}
                                     <div className="w-full md:w-64 aspect-[3/1] relative rounded-xl overflow-hidden bg-zinc-900 border border-border shadow-inner flex-shrink-0">
-                                        <img 
+                                        <Image 
                                             src={banner.imageUrl} 
                                             alt={banner.title}
-                                            className="object-cover w-full h-full"
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
                                         />
                                         {!banner.active && (
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

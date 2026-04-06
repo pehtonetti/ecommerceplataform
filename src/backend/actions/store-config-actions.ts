@@ -5,19 +5,49 @@ import { revalidatePath } from "next/cache";
 import { validatePixKey } from "@/lib/pix";
 import { getStoreId } from "@/backend/lib/store-context";
 
+// Tipo explícito para evitar inferência incorreta de 'Store | {}'
+export type StoreConfig = {
+    id: string;
+    name: string;
+    slug: string;
+    plan: string;
+    ownerId: string;
+    logoUrl: string | null;
+    faviconUrl: string | null;
+    primaryColor: string | null;
+    theme: string | null;
+    currency: string;
+    locale: string;
+    originZipCode: string | null;
+    whatsappNumber: string | null;
+    pixKey: string | null;
+    googleAnalyticsId: string | null;
+    facebookPixelId: string | null;
+    homeLayout: string | null;
+    merchantCity: string | null;
+    whatsappMessage: string | null;
+    active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    customDomain: string | null;
+};
+
 /**
  * Busca configurações da loja baseada no acesso
  */
-export async function getStoreConfig() {
+export async function getStoreConfig(): Promise<
+    { success: true; config: StoreConfig | null } |
+    { success: false; error: string }
+> {
     try {
         const storeId = await getStoreId();
         const config = await prisma.store.findUnique({
             where: { id: storeId }
-        });
+        }) as StoreConfig | null;
         return { success: true, config };
     } catch (error) {
         console.error("Erro ao buscar configurações:", error);
-        return { error: "Erro ao buscar configurações" };
+        return { success: false, error: "Erro ao buscar configurações" };
     }
 }
 
@@ -41,7 +71,7 @@ export async function updateStoreConfig(data: {
         if (data.pixKey) {
             const validation = validatePixKey(data.pixKey);
             if (!validation.valid) {
-                return { error: validation.error || "Chave PIX inválida" };
+                return { success: false, error: validation.error || "Chave PIX inválida" };
             }
         }
 
@@ -65,7 +95,7 @@ export async function updateStoreConfig(data: {
         return { success: true, config };
     } catch (error) {
         console.error("Erro ao atualizar configurações:", error);
-        return { error: "Erro ao salvar configurações" };
+        return { success: false, error: "Erro ao salvar configurações" };
     }
 }
 
@@ -90,11 +120,11 @@ export async function updateStoreAppearance(data: {
         });
 
         revalidatePath('/dashboard/settings/appearance');
-        revalidatePath('/'); // Revalida a storefront 
+        revalidatePath('/'); // Revalida a storefront
 
         return { success: true, config };
     } catch (error) {
         console.error("Erro ao atualizar aparência:", error);
-        return { error: "Erro ao salvar configurações de aparência" };
+        return { success: false, error: "Erro ao salvar configurações de aparência" };
     }
 }

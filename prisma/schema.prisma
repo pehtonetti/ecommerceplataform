@@ -32,6 +32,7 @@ model Store {
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  owner           User     @relation(fields: [ownerId], references: [id])
 
   products        Product[]
   orders          Order[]
@@ -448,6 +449,7 @@ model User {
   wishlistItems WishlistItem[]
   productViews ProductView[]
   supportTickets SupportTicket[]
+  stores        Store[]
 
   @@map("user")
 }

@@ -44,11 +44,12 @@ export default function PromoBannerCarousel({ banners: propBanners = [] }: { ban
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isMounted, setIsMounted] = useState(false);
 
-    // Usa passados via Prop (Puck) ou Fallback para os defaultBanners
+    // Usa passados via Prop ou Fallback para os defaultBanners
     const banners = propBanners.length > 0 ? propBanners : defaultBanners;
 
     useEffect(() => {
-        setIsMounted(true);
+        const frame = requestAnimationFrame(() => setIsMounted(true));
+        return () => cancelAnimationFrame(frame);
     }, []);
 
     useEffect(() => {

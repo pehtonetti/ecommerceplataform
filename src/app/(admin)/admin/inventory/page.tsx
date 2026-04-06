@@ -13,7 +13,8 @@ export default async function InventoryPage() {
     const allProducts = await prisma.product.findMany({
         orderBy: { name: 'asc' }
     });
-    const recentBatches = await getInventoryBatches();
+    const result = await getInventoryBatches();
+    const recentBatches = result.success && result.batches ? result.batches : [];
 
     const lowStockProducts = allProducts.filter(p => p.stock <= 5);
 

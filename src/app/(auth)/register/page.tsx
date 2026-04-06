@@ -22,8 +22,9 @@ export default function RegisterPage() {
         if (result?.error) {
             setError(result.error);
             setIsLoading(false);
+        } else if (result?.success) {
+            window.location.href = '/login?registered=true';
         }
-        // Redirect is handled by server action throwing proper error
     };
 
     return (

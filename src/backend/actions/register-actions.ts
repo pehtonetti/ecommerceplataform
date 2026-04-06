@@ -17,21 +17,21 @@ export async function register(formData: FormData) {
 
         // Validações
         if (!name || !email || !password || !confirmPassword) {
-            return { error: 'Todos os campos são obrigatórios.' };
+            return { success: false, error: 'Todos os campos são obrigatórios.' };
         }
 
         if (password !== confirmPassword) {
-            return { error: 'As senhas não coincidem.' };
+            return { success: false, error: 'As senhas não coincidem.' };
         }
 
         if (password.length < 6) {
-            return { error: 'A senha deve ter no mínimo 6 caracteres.' };
+            return { success: false, error: 'A senha deve ter no mínimo 6 caracteres.' };
         }
 
         // Validar e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return { error: 'E-mail inválido.' };
+            return { success: false, error: 'E-mail inválido.' };
         }
 
         // Verificar se e-mail já existe
@@ -40,7 +40,7 @@ export async function register(formData: FormData) {
         });
 
         if (existingUser) {
-            return { error: 'Este e-mail já está cadastrado.' };
+            return { success: false, error: 'Este e-mail já está cadastrado.' };
         }
 
         // Hash da senha
@@ -67,11 +67,10 @@ export async function register(formData: FormData) {
             // Não falhar o registro se o e-mail falhar
         }
 
-        // Redirecionar para login
-        redirect('/login?registered=true');
+        return { success: true };
     } catch (error: any) {
         if (error?.digest?.startsWith('NEXT_REDIRECT')) throw error;
         console.error('Erro ao criar conta:', error);
-        return { error: 'Erro ao criar conta. Tente novamente.' };
+        return { success: false, error: 'Erro ao criar conta. Tente novamente.' };
     }
 }

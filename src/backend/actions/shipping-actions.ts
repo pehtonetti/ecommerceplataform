@@ -9,7 +9,7 @@ export async function createCarrier(formData: FormData) {
     const calculateApiUrl = formData.get("calculateApiUrl") as string;
     const apiKey = formData.get("apiKey") as string;
 
-    if (!name) return { error: "Nome obrigatório" };
+    if (!name) return { success: false, error: "Nome obrigatório" };
 
     try {
         const storeId = await getStoreId();
@@ -25,7 +25,7 @@ export async function createCarrier(formData: FormData) {
         revalidatePath("/admin/shipping");
         return { success: true };
     } catch (error) {
-        return { error: "Erro ao criar transportadora" };
+        return { success: false, error: "Erro ao criar transportadora" };
     }
 }
 
@@ -39,7 +39,7 @@ export async function toggleCarrierStatus(id: string, currentStatus: boolean) {
         revalidatePath("/admin/shipping");
         return { success: true };
     } catch (error) {
-        return { error: "Erro ao atualizar status" };
+        return { success: false, error: "Erro ao atualizar status" };
     }
 }
 
@@ -52,7 +52,7 @@ export async function deleteCarrier(id: string) {
         revalidatePath("/admin/shipping");
         return { success: true };
     } catch (error) {
-        return { error: "Erro ao deletar transportadora" };
+        return { success: false, error: "Erro ao deletar transportadora" };
     }
 }
 
@@ -63,7 +63,7 @@ export async function getUserAddresses(userId: string) {
 }
 
 export async function saveUserAddress(userId: string, data: any) {
-    if (!userId) return { error: "Sem usuário" };
+    if (!userId) return { success: false, error: "Sem usuário" };
     const saved = await prisma.address.create({ data: { ...data, userId } });
     return { success: true, address: saved };
 }
@@ -74,7 +74,7 @@ export async function getAddressByCEP(cep: string) {
         const json = await res.json();
         return { data: json };
     } catch(e) {
-        return { error: "CEP inválido" };
+        return { success: false, error: "CEP inválido" };
     }
 }
 
@@ -84,7 +84,7 @@ export async function calculateCartShipping(userId: string, zipCode: string) {
         const cartResult = await getCart(userId);
         
         if (!cartResult.cart || cartResult.cart.items.length === 0) {
-            return { error: "Carrinho vazio" };
+            return { success: false, error: "Carrinho vazio" };
         }
 
         const { calculateShipping, calculateCartDimensions } = await import("@/lib/shipping");
@@ -112,7 +112,7 @@ export async function calculateCartShipping(userId: string, zipCode: string) {
         return { success: true, quotes };
     } catch (error) {
         console.error("Erro no cálculo de frete:", error);
-        return { error: "Falha ao calcular frete" };
+        return { success: false, error: "Falha ao calcular frete" };
     }
 }
 
@@ -123,7 +123,7 @@ export async function calculateProductShipping(productId: string, zipCode: strin
             where: { id: productId }
         });
 
-        if (!product || product.storeId !== storeId) return { error: "Produto não encontrado" };
+        if (!product || product.storeId !== storeId) return { success: false, error: "Produto não encontrado" };
 
         const { calculateShipping, calculateCartDimensions } = await import("@/lib/shipping");
 
@@ -147,6 +147,6 @@ export async function calculateProductShipping(productId: string, zipCode: strin
         return { success: true, quotes };
     } catch (error) {
         console.error("Erro no cálculo de frete do produto:", error);
-        return { error: "Falha ao calcular frete" };
+        return { success: false, error: "Falha ao calcular frete" };
     }
 }

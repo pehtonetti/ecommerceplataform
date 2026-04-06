@@ -11,7 +11,7 @@ export async function registerStore(formData: FormData) {
     const password = formData.get('password') as string;
 
     if (!storeName || !slug || !email || !password || !ownerName) {
-        return { error: 'Por favor, preencha todos os campos obrigatórios.' };
+        return { success: false, error: 'Por favor, preencha todos os campos obrigatórios.' };
     }
 
     try {
@@ -21,7 +21,7 @@ export async function registerStore(formData: FormData) {
         });
 
         if (existingEmail) {
-            return { error: 'Já existe um usuário com este e-mail.' };
+            return { success: false, error: 'Já existe um usuário com este e-mail.' };
         }
 
         // Valida se o slug escolhido para a loja já existe na Simplify
@@ -30,7 +30,7 @@ export async function registerStore(formData: FormData) {
         });
 
         if (existingSlug) {
-            return { error: 'O domínio (slug) escolhido já está em uso na plataforma Simplify. Tente outro.' };
+            return { success: false, error: 'O domínio (slug) escolhido já está em uso na plataforma Simplify. Tente outro.' };
         }
 
         // Hash da senha do Lojista
@@ -70,6 +70,6 @@ export async function registerStore(formData: FormData) {
 
     } catch (error) {
         console.error("Erro ao registrar a loja:", error);
-        return { error: 'Ocorreu um erro ao criar a sua loja na plataforma. Tente novamente mais tarde.' };
+        return { success: false, error: 'Ocorreu um erro ao criar a sua loja na plataforma. Tente novamente mais tarde.' };
     }
 }

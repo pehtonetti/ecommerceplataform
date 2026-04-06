@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export async function toggleWishlist(productId: string) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login required" };
+    if (!user) return { success: false, error: "Login required" };
 
     try {
         const existingItem = await prisma.wishlistItem.findUnique({
@@ -36,7 +36,7 @@ export async function toggleWishlist(productId: string) {
         }
     } catch (error) {
         console.error("Wishlist Toggle Error:", error);
-        return { error: "Erro ao atualizar favoritos" };
+        return { success: false, error: "Erro ao atualizar favoritos" };
     }
 }
 
@@ -52,7 +52,7 @@ export async function getWishlist() {
         return { items: wishlist };
     } catch (error) {
         console.error("Wishlist Fetch Error:", error);
-        return { error: "Erro ao buscar favoritos", items: [] };
+        return { success: false, error: "Erro ao buscar favoritos", items: [] };
     }
 }
 

@@ -22,8 +22,8 @@ export interface Product {
     createdAt: Date | string;
     videoUrl?: string | null;
     images?: Array<{ url: string }>;
-    colors?: any; // JSON
-    capacities?: any; // JSON
+    colors?: string | null; // JSON string
+    capacities?: string | null; // JSON string
 }
 
 export interface StoreConfig {

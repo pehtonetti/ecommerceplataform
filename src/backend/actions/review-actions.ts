@@ -12,7 +12,7 @@ export async function submitReview(data: {
     videoUrl?: string;
 }) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Necessário login para avaliar" };
+    if (!user) return { success: false, error: "Necessário login para avaliar" };
 
     try {
         // 1. Create the review
@@ -53,7 +53,7 @@ export async function submitReview(data: {
         return { success: true, pointsAwarded };
     } catch (e) {
         console.error("Error submitting review:", e);
-        return { error: "Falha ao enviar avaliação" };
+        return { success: false, error: "Falha ao enviar avaliação" };
     }
 }
 
@@ -68,8 +68,8 @@ export async function getProductReviews(productId: string) {
 export async function deleteReview(reviewId: string, userId: string) {
     try {
         const review = await prisma.review.findUnique({ where: { id: reviewId } });
-        if (!review) return { error: "Avaliação não encontrada" };
-        if (review.userId !== userId) return { error: "Não autorizado" };
+        if (!review) return { success: false, error: "Avaliação não encontrada" };
+        if (review.userId !== userId) return { success: false, error: "Não autorizado" };
 
         await prisma.review.delete({ where: { id: reviewId } });
         
@@ -79,6 +79,6 @@ export async function deleteReview(reviewId: string, userId: string) {
         return { success: true };
     } catch (e) {
         console.error("Error deleting review:", e);
-        return { error: "Erro ao deletar avaliação" };
+        return { success: false, error: "Erro ao deletar avaliação" };
     }
 }

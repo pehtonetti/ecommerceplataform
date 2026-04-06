@@ -9,6 +9,10 @@
     "start": "next start",
     "start:network": "next start --hostname 0.0.0.0",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "ci:local": "npm run lint && npm run test:coverage && npm run build && npm audit",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed-store": "npx tsx prisma/seed-default-store.ts",
@@ -18,7 +22,6 @@
     "@ducanh2912/next-pwa": "^10.2.9",
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
-    "@measured/puck": "^0.20.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-switch": "^1.2.6",
     "@sendgrid/mail": "^8.1.6",
@@ -49,17 +52,22 @@
   "devDependencies": {
     "@prisma/client": "5.22.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/amqplib": "^0.10.8",
     "@types/node": "^20.19.27",
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.0.8",
+    "jsdom": "^29.0.1",
     "prisma": "5.22.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "prisma": {
     "seed": "ts-node -O {\"\"\"module\"\"\":\"\"\"CommonJS\"\"\"} prisma/seed_brasil.ts"

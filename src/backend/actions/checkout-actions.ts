@@ -6,18 +6,18 @@ import { revalidatePath } from "next/cache";
 import { calculateTax } from "@/lib/tax-utils";
 
 export async function validateCoupon(code: string) {
-    if (!code) return { error: 'Código inválido' };
+    if (!code) return { success: false, error: 'Código inválido' };
 
     const coupon = await prisma.coupon.findUnique({
         where: { code: code.toUpperCase() }
     });
 
-    if (!coupon) return { error: 'Cupom não encontrado' };
-    if (!coupon.active) return { error: 'Cupom inativo' };
+    if (!coupon) return { success: false, error: 'Cupom não encontrado' };
+    if (!coupon.active) return { success: false, error: 'Cupom inativo' };
 
     const now = new Date();
-    if (coupon.validUntil && coupon.validUntil < now) return { error: 'Cupom expirado' };
-    if (coupon.validFrom > now) return { error: 'Cupom ainda não é válido' };
+    if (coupon.validUntil && coupon.validUntil < now) return { success: false, error: 'Cupom expirado' };
+    if (coupon.validFrom > now) return { success: false, error: 'Cupom ainda não é válido' };
 
     return {
         success: true,
@@ -43,7 +43,7 @@ export async function getUserAddresses() {
 
 export async function createAddress(formData: FormData) {
     const user = await getCurrentUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return { success: false, error: 'Not authenticated' };
 
     const zipCode = formData.get('zipCode') as string;
     const street = formData.get('street') as string;
@@ -73,7 +73,7 @@ export async function createAddress(formData: FormData) {
         return { success: true };
     } catch (e) {
         console.error(e);
-        return { error: 'Error creating address' };
+        return { success: false, error: 'Error creating address' };
     }
 }
 
@@ -88,7 +88,7 @@ export async function checkoutOrder(data: {
     document?: string; // CPF/CNPJ
 }) {
     const user = await getCurrentUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return { success: false, error: 'Not authenticated' };
 
     try {
         // 0. Update User Document if provided
@@ -106,7 +106,7 @@ export async function checkoutOrder(data: {
         });
 
         if (!cart || cart.items.length === 0) {
-            return { error: 'Carrinho vazio' };
+            return { success: false, error: 'Carrinho vazio' };
         }
 
         // 2. Fetch Address to calculate tax
@@ -194,6 +194,6 @@ export async function checkoutOrder(data: {
         return { success: true, orderId: order.id, url: redirectUrl };
     } catch (e) {
         console.error('Checkout Error:', e);
-        return { error: 'Erro ao processar pedido' };
+        return { success: false, error: 'Erro ao processar pedido' };
     }
 }

@@ -10,36 +10,60 @@ export interface DashboardStats {
     lowStock: { total: number, change: number };
 }
 
-export async function getDashboardStats() {
-    const storeId = await getStoreId();
+export async function getDashboardStats(): Promise<
+    { success: true; sales: any; customers: any; products: any; orders: any } |
+    { success: false; error: string }
+> {
+    try {
+        const storeId = await getStoreId();
 
-    const [
-        totalRevenueResult,
-        totalOrders,
-        totalCustomers, // Needs refinement if checking users per store, but works for now
-        lowStockCount
-    ] = await Promise.all([
-        prisma.order.aggregate({
-            _sum: { total: true },
-            where: { storeId, status: { not: 'cancelled' } }
-        }),
-        prisma.order.count({ where: { storeId } }),
-        prisma.order.groupBy({
-            by: ['userId'],
-            where: { storeId },
-            _count: true
-        }).then(res => res.length),
-        prisma.product.count({ where: { storeId, stock: { lte: 5 } } })
-    ]);
+        const [
+            totalRevenueResult,
+            totalOrders,
+            pendingOrdersCount,
+            totalCustomers,
+            newCustomersCount,
+            totalProducts,
+            activeProductsCount,
+            lowStockCount
+        ] = await Promise.all([
+            prisma.order.aggregate({
+                _sum: { total: true },
+                where: { storeId, status: 'paid' }
+            }),
+            prisma.order.count({ where: { storeId } }),
+            prisma.order.count({ where: { storeId, status: 'pending' } }),
+            prisma.order.groupBy({
+                by: ['userId'],
+                where: { storeId },
+                _count: true
+            }).then(res => res.length),
+            prisma.order.groupBy({
+                by: ['userId'],
+                where: { 
+                    storeId, 
+                    createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+                },
+                _count: true
+            }).then(res => res.length),
+            prisma.product.count({ where: { storeId } }),
+            prisma.product.count({ where: { storeId, active: true } }),
+            prisma.product.count({ where: { storeId, stock: { lte: 5 } } })
+        ]);
 
-    const revenue = totalRevenueResult._sum.total || 0;
+        const revenue = totalRevenueResult._sum.total || 0;
 
-    return {
-        revenue: { value: revenue, change: '+12.5%' },
-        orders: { value: totalOrders, change: '+5%' },
-        customers: { value: totalCustomers, change: '+2%' },
-        lowStock: { value: lowStockCount, change: '0' }
-    };
+        return {
+            success: true,
+            sales: { total: revenue, totalOrders: totalOrders },
+            orders: { total: totalOrders, pending: pendingOrdersCount },
+            customers: { total: totalCustomers, new: newCustomersCount },
+            products: { total: totalProducts, active: activeProductsCount, lowStock: lowStockCount }
+        };
+    } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        return { success: false, error: "Erro ao buscar estatísticas do painel" };
+    }
 }
 
 export async function getRecentOrders() {

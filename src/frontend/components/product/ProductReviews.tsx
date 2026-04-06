@@ -12,8 +12,19 @@ const MOCK_REVIEWS = [
     { id: 3, user: "Ana Souza", rating: 5, date: "05/12/2024", title: "Perfeito", comment: "Exatamente como na foto. Comprarei novamente.", verified: false },
 ];
 
+interface Review {
+    id: number;
+    user: string;
+    rating: number;
+    date: string;
+    title: string;
+    comment: string;
+    verified: boolean;
+    videoUrl?: string;
+}
+
 export function ProductReviews({ productId }: { productId: string }) {
-    const [reviews, setReviews] = useState(MOCK_REVIEWS);
+    const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
 
     const averageRating = reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length;
 
@@ -62,7 +73,7 @@ export function ProductReviews({ productId }: { productId: string }) {
 
                 {/* Reviews List */}
                 <div className="lg:col-span-8 space-y-6">
-                    {reviews.map((review: any) => (
+                    {reviews.map((review) => (
                         <FadeIn key={review.id} className="border-b border-border pb-6 last:border-0">
                             <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -102,7 +113,7 @@ export function ProductReviews({ productId }: { productId: string }) {
 
                             <div className="flex items-center gap-4">
                                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground h-auto p-0 hover:bg-transparent">
-                                    <ThumbsUp className="w-3 h-3 mr-1.5" /> Útil ({Math.floor(Math.random() * 10)})
+                                    <ThumbsUp className="w-3 h-3 mr-1.5" /> Útil ({(review.id * 7) % 15})
                                 </Button>
                             </div>
                         </FadeIn>

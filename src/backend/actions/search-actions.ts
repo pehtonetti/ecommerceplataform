@@ -102,7 +102,7 @@ export async function searchProducts(filters: SearchFilters) {
         };
     } catch (error) {
         console.error('Erro ao buscar produtos:', error);
-        return { error: 'Erro ao buscar produtos' };
+        return { success: false, error: 'Erro ao buscar produtos' };
     }
 }
 

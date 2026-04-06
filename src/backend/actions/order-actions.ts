@@ -34,7 +34,7 @@ export async function createOrder(data: CheckoutData) {
         });
 
         if (!cart || cart.items.length === 0) {
-            return { error: 'Carrinho vazio' };
+            return { success: false, error: 'Carrinho vazio' };
         }
 
         // 2. Buscar endereço
@@ -43,14 +43,13 @@ export async function createOrder(data: CheckoutData) {
         });
 
         if (!address) {
-            return { error: 'Endereço não encontrado' };
+            return { success: false, error: 'Endereço não encontrado' };
         }
 
         // 3. Validar estoque
         for (const item of cart.items) {
             if (item.product.stock < item.quantity) {
-                return {
-                    error: `Produto "${item.product.name}" sem estoque suficiente`
+                return { success: false, error: `Produto "${item.product.name}" sem estoque suficiente`
                 };
             }
         }
@@ -83,7 +82,7 @@ export async function createOrder(data: CheckoutData) {
         const selectedShipping = quotes.find(q => q.service === data.shippingMethod);
 
         if (!selectedShipping) {
-            return { error: 'Método de frete inválido' };
+            return { success: false, error: 'Método de frete inválido' };
         }
 
         const shippingCost = selectedShipping.price;
@@ -136,7 +135,7 @@ export async function createOrder(data: CheckoutData) {
             );
 
             if (pointsResult.error) {
-                return { error: pointsResult.error };
+                return { success: false, error: pointsResult.error };
             }
 
             if (pointsResult.discountAmount) {
@@ -286,7 +285,7 @@ export async function createOrder(data: CheckoutData) {
 
     } catch (error) {
         console.error('Erro ao criar pedido:', error);
-        return { error: 'Erro ao processar pedido. Tente novamente.' };
+        return { success: false, error: 'Erro ao processar pedido. Tente novamente.' };
     }
 }
 
@@ -317,13 +316,13 @@ export async function getOrderDetails(orderId: string) {
         });
 
         if (!order) {
-            return { error: 'Pedido não encontrado' };
+            return { success: false, error: 'Pedido não encontrado' };
         }
 
         return { success: true, order };
     } catch (error) {
         console.error('Erro ao buscar pedido:', error);
-        return { error: 'Erro ao buscar pedido' };
+        return { success: false, error: 'Erro ao buscar pedido' };
     }
 }
 
@@ -351,7 +350,7 @@ export async function getUserOrders(userId: string) {
         return { success: true, orders };
     } catch (error) {
         console.error('Erro ao buscar pedidos:', error);
-        return { error: 'Erro ao buscar pedidos' };
+        return { success: false, error: 'Erro ao buscar pedidos' };
     }
 }
 
@@ -366,7 +365,7 @@ export async function updateOrderStatus(orderId: string, status: string, trackin
             include: { user: true, items: { include: { product: true } } }
         });
 
-        if (!order) return { error: 'Pedido não encontrado' };
+        if (!order) return { success: false, error: 'Pedido não encontrado' };
 
         // 1. Lógica de Rollback se for cancelamento
         if (status === 'cancelled' && order.status !== 'cancelled') {
@@ -419,7 +418,7 @@ export async function updateOrderStatus(orderId: string, status: string, trackin
         return { success: true };
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
-        return { error: 'Erro ao atualizar status' };
+        return { success: false, error: 'Erro ao atualizar status' };
     }
 }
 
@@ -436,7 +435,7 @@ export async function cancelOrderAndRollback(orderId: string, reason: string) {
 
         // Somente pode cancelar e fazer rollback se o pedido estiver pendente ou falhado
         if (!order || (order.status !== 'pending' && order.status !== 'awaiting_payment')) {
-            return { error: 'Pedido já processado ou inexistente' };
+            return { success: false, error: 'Pedido já processado ou inexistente' };
         }
 
         // 1. Rollback de Estoque
@@ -500,7 +499,7 @@ export async function cancelOrderAndRollback(orderId: string, reason: string) {
         return { success: true };
     } catch (error) {
         console.error(`❌ Erro no rollback do pedido ${orderId}:`, error);
-        return { error: 'Falha no rollback' };
+        return { success: false, error: 'Falha no rollback' };
     }
 }
 
@@ -522,6 +521,6 @@ export async function getMerchantOrders() {
         return { success: true, orders };
     } catch (error) {
         console.error('Erro ao buscar pedidos do lojista:', error);
-        return { error: 'Erro ao buscar pedidos' };
+        return { success: false, error: 'Erro ao buscar pedidos' };
     }
 }

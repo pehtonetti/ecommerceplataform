@@ -2,77 +2,123 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store } from 'lucide-react';
+import {
+    Store, LayoutDashboard, Package, ShoppingBag, FolderOpen,
+    Users, BarChart3, Tag, Image, Star, FileText,
+    Palette, Settings, Zap, LifeBuoy, LogOut, ExternalLink
+} from 'lucide-react';
 
-export function MerchantSidebar({ name }: { name: string }) {
+const NAV_GROUPS = [
+    {
+        label: 'Principal',
+        items: [
+            { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard, exact: true },
+            { href: '/dashboard/orders', label: 'Pedidos', icon: ShoppingBag },
+            { href: '/dashboard/products', label: 'Produtos', icon: Package },
+            { href: '/dashboard/categories', label: 'Categorias', icon: FolderOpen },
+            { href: '/dashboard/customers', label: 'Clientes', icon: Users },
+            { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+        ],
+    },
+    {
+        label: 'Marketing & CMS',
+        items: [
+            { href: '/dashboard/blog', label: 'Blog', icon: FileText },
+            { href: '/dashboard/banners', label: 'Banners', icon: Image },
+            { href: '/dashboard/coupons', label: 'Cupons', icon: Tag },
+            { href: '/dashboard/reviews', label: 'Avaliações', icon: Star },
+            { href: '/dashboard/apps', label: 'Integrações', icon: Zap },
+        ],
+    },
+    {
+        label: 'Loja',
+        items: [
+            { href: '/dashboard/settings/appearance', label: 'Aparência', icon: Palette },
+            { href: '/dashboard/settings', label: 'Configurações', icon: Settings },
+            { href: '/dashboard/support', label: 'Suporte', icon: LifeBuoy },
+        ],
+    },
+];
+
+export function MerchantSidebar({ storeName, storeSlug }: { storeName: string; storeSlug?: string }) {
     const pathname = usePathname();
 
-    const links = [
-        { href: '/dashboard', label: '📊 Visão Geral', icon: '📊' },
-        { href: '/dashboard/orders', label: '📦 Pedidos', icon: '📦' },
-        { href: '/dashboard/products', label: '🛍️ Produtos', icon: '🛍️' },
-        { href: '/dashboard/categories', label: '📂 Categorias', icon: '📂' },
-        { href: '/dashboard/customers', label: '👥 Clientes', icon: '👥' },
-        { href: '/dashboard/marketing', label: '🎯 Marketing', icon: '🎯' },
-        { href: '/dashboard/settings', label: '⚙️ Configurações', icon: '⚙️' },
-    ];
+    const isActive = (href: string, exact = false) => {
+        if (exact) return pathname === href;
+        return pathname === href || pathname?.startsWith(`${href}/`);
+    };
 
     return (
-        <aside className="w-68 bg-zinc-950 border-r border-zinc-800 flex flex-col h-screen shrink-0 sticky top-0 shadow-2xl">
-            <div className="p-8 pb-6 group cursor-default">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
-                        <Store className="w-6 h-6 text-white" />
+        <aside className="w-64 bg-zinc-950 border-r border-zinc-800/60 flex flex-col h-screen shrink-0 sticky top-0">
+            {/* Logo + Store */}
+            <div className="p-5 pb-4 border-b border-white/5">
+                <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                        <Store className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-2xl font-black tracking-tightest bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+                    <span className="text-base font-black tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Simplify
                     </span>
                 </div>
-                
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-sm group-hover:bg-white/[0.05] transition-colors">
-                    <h2 className="text-sm font-bold text-white m-0 truncate">
-                        {name}
-                    </h2>
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Lojista Parceiro</p>
+
+                <div className="p-3 rounded-xl bg-white/[0.04] border border-white/5">
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Sua Loja</p>
+                    <h2 className="text-sm font-bold text-white truncate">{storeName}</h2>
+                    {storeSlug && (
+                        <a
+                            href={`http://${storeSlug}.simplify.com.br`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-indigo-400 transition-colors mt-1"
+                        >
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            {storeSlug}.simplify.com.br
+                        </a>
+                    )}
                 </div>
             </div>
-            
-            <nav className="flex-1 px-4 py-4 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar">
-                {links.map((link) => {
-                    const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname?.startsWith(`${link.href}`));
-                    return (
-                        <Link 
-                            key={link.href} 
-                            href={link.href}
-                            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl no-underline font-semibold text-sm transition-all duration-300 group/item ${
-                                isActive 
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-                                    : 'text-zinc-400 hover:bg-white/[0.05] hover:text-white'
-                            }`}
-                        >
-                            <span className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover/item:scale-110'}`}>
-                                {link.label.split(' ')[0]}
-                            </span>
-                            <span>{link.label.split(' ').slice(1).join(' ')}</span>
-                            {isActive && (
-                                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
-                            )}
-                        </Link>
-                    )
-                })}
+
+            {/* Nav */}
+            <nav className="flex-1 px-3 py-3 flex flex-col gap-4 overflow-y-auto">
+                {NAV_GROUPS.map((group) => (
+                    <div key={group.label}>
+                        <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.15em] px-2 mb-1.5">
+                            {group.label}
+                        </p>
+                        <div className="flex flex-col gap-0.5">
+                            {group.items.map((item) => {
+                                const active = isActive(item.href, item.exact);
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 no-underline ${
+                                            active
+                                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                                                : 'text-zinc-400 hover:bg-white/[0.05] hover:text-white'
+                                        }`}
+                                    >
+                                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-zinc-500'}`} />
+                                        {item.label}
+                                        {active && <div className="ml-auto w-1 h-1 rounded-full bg-white/60" />}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
             </nav>
 
-            <div className="p-6 border-t border-white/5 space-y-4">
-                <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl p-4 border border-white/5">
-                    <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mb-1 text-center">Precisa de Ajuda?</p>
-                    <Link href="/dashboard/support" className="block w-full py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-[11px] font-bold rounded-lg text-center transition-all">
-                        Falar com Consultor
-                    </Link>
-                </div>
-                
+            {/* Footer */}
+            <div className="p-4 border-t border-white/5">
                 <form action="/api/auth/logout" method="POST">
-                    <button type="submit" className="w-full py-3 bg-white/[0.03] text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl font-bold cursor-pointer text-center transition-all text-xs border border-transparent hover:border-red-400/20">
-                        Finalizar Sessão
+                    <button
+                        type="submit"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold text-zinc-500 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sair da conta
                     </button>
                 </form>
             </div>

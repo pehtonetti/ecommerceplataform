@@ -5,7 +5,8 @@ import { getCoupons, createCoupon, toggleCouponStatus } from "@/backend/actions/
 import { Input } from "@/frontend/components/ui/Input";
 
 export default async function PromotionsPage() {
-    const coupons = await getCoupons();
+    const result = await getCoupons();
+    const coupons = result.success && result.coupons ? result.coupons : [];
 
     return (
         <div className="space-y-8">

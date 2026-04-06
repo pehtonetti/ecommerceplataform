@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { getUserAddresses, calculateCartShipping } from "@/backend/actions/shipping-actions";
 import { createOrder } from "@/backend/actions/order-actions";
 import { getCart } from "@/backend/actions/cart-actions";
@@ -21,7 +22,7 @@ export function CheckoutPage({ userId }: CheckoutPageProps) {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
 
-    const [cart, setCart] = useState<any>(null);
+    const [cart, setCart] = useState<{items: any[]} | null>(null);
     const [addresses, setAddresses] = useState<any[]>([]);
     const [shippingQuotes, setShippingQuotes] = useState<any[]>([]);
 
@@ -31,10 +32,16 @@ export function CheckoutPage({ userId }: CheckoutPageProps) {
     const [couponId, setCouponId] = useState<string | null>(null);
     const [discount, setDiscount] = useState(0);
 
-    // Carregar dados iniciais
-    useEffect(() => {
-        loadData();
-    }, []);
+    const loadShipping = async (zipCode: string) => {
+        const result = await calculateCartShipping(userId, zipCode);
+        if (result.quotes) {
+            setShippingQuotes(result.quotes);
+            // Selecionar primeira opção por padrão
+            if (result.quotes.length > 0) {
+                setSelectedShipping(result.quotes[0].service);
+            }
+        }
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -60,16 +67,10 @@ export function CheckoutPage({ userId }: CheckoutPageProps) {
         setLoading(false);
     };
 
-    const loadShipping = async (zipCode: string) => {
-        const result = await calculateCartShipping(userId, zipCode);
-        if (result.quotes) {
-            setShippingQuotes(result.quotes);
-            // Selecionar primeira opção por padrão
-            if (result.quotes.length > 0) {
-                setSelectedShipping(result.quotes[0].service);
-            }
-        }
-    };
+    // Carregar dados iniciais
+    useEffect(() => {
+        loadData();
+    }, []);
 
     const handleAddressChange = async (addressId: string) => {
         setSelectedAddressId(addressId);
@@ -257,9 +258,11 @@ export function CheckoutPage({ userId }: CheckoutPageProps) {
                             <div key={item.id} className="flex gap-3">
                                 <div className="w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
                                     {item.product.imageUrl && (
-                                        <img
+                                        <Image
                                             src={item.product.imageUrl}
                                             alt={item.product.name}
+                                            width={64}
+                                            height={64}
                                             className="w-full h-full object-cover"
                                         />
                                     )}

@@ -25,12 +25,36 @@ interface ENotasItem {
     quantity: number;
 }
 
+interface OrderAddress {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zipCode: string;
+}
+
+interface OrderItem {
+    product: { name: string };
+    quantity: number;
+    price: number;
+}
+
+interface Order {
+    id: string;
+    total: number;
+    user: { name: string; email: string; document?: string };
+    address?: OrderAddress;
+    items: OrderItem[];
+}
+
 /**
  * Emits an invoice (NFe/NFCe) via ENotas Gateway
  * 
  * NOTE: This assumes we are sending a "Sale" to be processed.
  */
-export async function emitNFeForOrder(order: any) {
+export async function emitNFeForOrder(order: Order) {
     if (!env.ENOTAS_API_KEY) {
         console.warn('⚠️ ENotas API Key missing. Skipping invoice emission.');
         return { success: false, error: 'Misconfigured API Key' };
@@ -61,7 +85,7 @@ export async function emitNFeForOrder(order: any) {
             // If this were a service. For products, we use 'itens'.
             // But ENotas Gateway usually unifies. Let's assume 'itens' for product commerce.
         },
-        itens: order.items.map((item: any) => ({
+        itens: order.items.map((item) => ({
             descricao: item.product.name,
             quantidade: item.quantity,
             valorUnitario: item.price / 100 // Convert cents to float
@@ -90,11 +114,12 @@ export async function emitNFeForOrder(order: any) {
             status: response.data.status,
             linkPdf: response.data.linkDownloadPDF // if available immediately
         };
-    } catch (error: any) {
-        console.error('❌ Error communicating with ENotas:', error.response?.data || error.message);
+    } catch (error: unknown) {
+        const axiosError = error as any; // Cast safely for logging
+        console.error('❌ Error communicating with ENotas:', axiosError.response?.data || axiosError.message);
         return {
             success: false,
-            error: error.response?.data?.mensagem || error.message
+            error: axiosError.response?.data?.mensagem || axiosError.message
         };
     }
 }

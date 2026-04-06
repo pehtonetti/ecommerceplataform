@@ -12,7 +12,7 @@ export async function login(formData: FormData) {
     const password = formData.get('password') as string;
 
     if (!email || !password) {
-        return { error: 'Preencha todos os campos.' };
+        return { success: false, error: 'Preencha todos os campos.' };
     }
 
     try {
@@ -28,14 +28,14 @@ export async function login(formData: FormData) {
         });
 
         if (!user) {
-            return { error: 'Email ou senha inválidos.' };
+            return { success: false, error: 'Email ou senha inválidos.' };
         }
 
         // Verify password using bcrypt
         const isValidPassword = await verifyPassword(password, user.password);
 
         if (!isValidPassword) {
-            return { error: 'Email ou senha inválidos.' };
+            return { success: false, error: 'Email ou senha inválidos.' };
         }
 
         // Set Cookie as a Session Cookie (expires when browser/tab closes)
@@ -72,7 +72,7 @@ export async function login(formData: FormData) {
         };
     } catch (error) {
         console.error('Login error:', error);
-        return { error: 'Erro ao fazer login. Tente novamente.' };
+        return { success: false, error: 'Erro ao fazer login. Tente novamente.' };
     }
 }
 

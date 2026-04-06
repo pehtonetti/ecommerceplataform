@@ -10,13 +10,13 @@ export async function sendContactMessage(formData: FormData) {
         const message = formData.get('message') as string;
 
         if (!name || !email || !subject || !message) {
-            return { error: 'Todos os campos são obrigatórios' };
+            return { success: false, error: 'Todos os campos são obrigatórios' };
         }
 
         // Validar e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return { error: 'E-mail inválido' };
+            return { success: false, error: 'E-mail inválido' };
         }
 
         // Enviar e-mail para o suporte
@@ -117,6 +117,6 @@ export async function sendContactMessage(formData: FormData) {
         return { success: true };
     } catch (error) {
         console.error('Erro ao enviar mensagem:', error);
-        return { error: 'Erro ao enviar mensagem. Tente novamente.' };
+        return { success: false, error: 'Erro ao enviar mensagem. Tente novamente.' };
     }
 }

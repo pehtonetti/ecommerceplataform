@@ -9,9 +9,9 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 interface SettingsData {
-    name?: string;
-    pixKey?: string;
-    merchantCity?: string;
+    name?: string | null;
+    pixKey?: string | null;
+    merchantCity?: string | null;
 }
 
 export function SettingsForm({ initialData }: { initialData: SettingsData }) {

@@ -4,8 +4,8 @@ import { FadeIn } from "@/frontend/components/ui/Motion";
 import { Button } from "@/frontend/components/ui/Button";
 import { Input } from "@/frontend/components/ui/Input";
 import { Textarea } from "@/frontend/components/ui/Textarea";
-import { Mail, Send, Megaphone, Share2, Loader2, Users, Search, RefreshCw } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Mail, Send, Megaphone, Share2, Loader2, Users, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { sendEmailCampaign, getMarketingCustomers } from "@/backend/actions/marketing-actions";
 import {
@@ -38,7 +38,7 @@ export default function MarketingPage() {
             } else {
                 toast.error(result.error || "Erro ao carregar clientes");
             }
-        } catch (error) {
+        } catch {
             toast.error("Erro na conexão");
         } finally {
             setLoadingCustomers(false);

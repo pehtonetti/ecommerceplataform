@@ -4,12 +4,27 @@ import { Footer } from '@/frontend/components/Footer';
 import { getStoreContext } from '@/backend/lib/store-context';
 import Script from 'next/script';
 import { MessageCircle } from 'lucide-react';
+import { headers } from 'next/headers';
+import SimplifyLanding from '@/app/home/page';
+
+const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN ?? 'simplify.com.br';
 
 export default async function StorefrontLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const headersList = await headers();
+    const host = (headersList.get('host') ?? '').split(':')[0];
+
+    // Se não for subdomínio de loja → renderiza a landing page da Simplify
+    // sem Header/Footer de vitrine
+    const isStoreDomain = host.endsWith(`.${PLATFORM_DOMAIN}`) && PLATFORM_DOMAIN !== 'localhost';
+    if (!isStoreDomain) {
+        return <SimplifyLanding />;
+    }
+
+    // Subdomínio de loja → layout completo com Header, Footer e scripts
     const user = await getCurrentUser();
     const store = await getStoreContext();
 
@@ -74,4 +89,3 @@ export default async function StorefrontLayout({
         </div>
     );
 }
-

@@ -6,7 +6,8 @@ import Image from "next/image";
 import { DeleteProductButton } from "@/app/(admin)/admin/products/DeleteButton"; // Reusable for now
 
 export default async function MerchantProductsPage() {
-    const products = await getMerchantProducts();
+    const result = await getMerchantProducts();
+    const products = result.success && result.products ? result.products : [];
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

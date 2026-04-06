@@ -16,7 +16,7 @@ export async function updateUserTheme(theme: string) {
 
   // Validate theme
   if (!['light', 'dark', 'system'].includes(theme)) {
-    return { error: 'Invalid theme' };
+    return { success: false, error: 'Invalid theme' };
   }
 
   try {
@@ -32,7 +32,7 @@ export async function updateUserTheme(theme: string) {
     return { success: true };
   } catch (error) {
     console.error('Error updating theme cookie:', error);
-    return { error: 'Failed to update theme' };
+    return { success: false, error: 'Failed to update theme' };
   }
 }
 
@@ -114,13 +114,13 @@ export async function deleteUser(id: string) {
 
 export async function uploadUserAvatar(formData: FormData) {
   const user = await getCurrentUser();
-  if (!user) return { error: "Não autenticado" };
+  if (!user) return { success: false, error: "Não autenticado" };
 
   const file = formData.get("avatar") as File | null;
-  if (!file) return { error: "Nenhum arquivo enviado" };
+  if (!file) return { success: false, error: "Nenhum arquivo enviado" };
 
   if (file.size > 2 * 1024 * 1024) {
-    return { error: "O tamanho máximo é 2MB" };
+    return { success: false, error: "O tamanho máximo é 2MB" };
   }
 
   try {
@@ -143,6 +143,6 @@ export async function uploadUserAvatar(formData: FormData) {
     return { success: true, avatarUrl: base64Data };
   } catch (error) {
     console.error("Failed to upload avatar:", error);
-    return { error: "Erro ao atualizar a foto de perfil" };
+    return { success: false, error: "Erro ao atualizar a foto de perfil" };
   }
 }

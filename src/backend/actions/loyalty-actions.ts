@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache";
 
 export async function redeemPointsForCoupon(pointsToSpend: number) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login necessário" };
+    if (!user) return { success: false, error: "Login necessário" };
 
     if (user.loyaltyPoints < pointsToSpend) {
-        return { error: "Pontos insuficientes" };
+        return { success: false, error: "Pontos insuficientes" };
     }
 
     try {
@@ -56,7 +56,7 @@ export async function redeemPointsForCoupon(pointsToSpend: number) {
         return { success: true, couponCode, discountValue };
     } catch (e) {
         console.error("Redeem points error:", e);
-        return { error: "Erro ao processar resgate" };
+        return { success: false, error: "Erro ao processar resgate" };
     }
 }
 
@@ -74,10 +74,10 @@ export async function getLoyaltyHistory() {
 
 export async function validatePointsUsage(points: number, subtotal: number) {
     const user = await getCurrentUser();
-    if (!user) return { error: 'Usuário não autenticado' };
+    if (!user) return { success: false, error: 'Usuário não autenticado' };
 
     if (points > user.loyaltyPoints) {
-        return { error: 'Saldo de pontos insuficiente' };
+        return { success: false, error: 'Saldo de pontos insuficiente' };
     }
 
     // Rule: Max 50% of subtotal can be paid with points? Or 100%?
@@ -85,7 +85,7 @@ export async function validatePointsUsage(points: number, subtotal: number) {
     const discountAmount = points; // 1 point = 1 cent
 
     if (discountAmount > subtotal) {
-        return { error: 'Não é possível usar mais pontos do que o valor do pedido' };
+        return { success: false, error: 'Não é possível usar mais pontos do que o valor do pedido' };
     }
 
     return { success: true, discountAmount };

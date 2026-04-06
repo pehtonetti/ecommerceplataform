@@ -5,7 +5,8 @@ import { CreateCategoryButton } from "./CreateCategoryButton";
 import { CategoryActionsClient } from "./CategoryActionsClient";
 
 export default async function CategoriesPage() {
-    const categories = await getCategories();
+    const result = await getCategories();
+    const categories = result.success && result.categories ? result.categories : [];
 
     return (
         <div className="space-y-8">

@@ -1,13 +1,13 @@
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp from 'amqplib';
 
 let connection: any = null;
-let channel: Channel | null = null;
+let channel: any = null;
 
 export async function getMessageQueue() {
     if (!connection) {
         connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
 
-        connection.on('error', (err: any) => {
+        connection.on('error', (err: Error) => {
             console.error('RabbitMQ Connection Error:', err);
             connection = null;
             channel = null;
@@ -20,7 +20,7 @@ export async function getMessageQueue() {
         });
     }
 
-    if (!channel) {
+    if (!channel && connection) {
         channel = await connection.createChannel();
     }
 
@@ -30,7 +30,7 @@ export async function getMessageQueue() {
 /**
  * Send email via message queue
  */
-export async function sendEmail(type: string, to: string, data: any) {
+export async function sendEmail(type: string, to: string, data: Record<string, unknown>) {
     try {
         const ch = await getMessageQueue();
         if (!ch) throw new Error('Failed to connect to message queue');
@@ -59,12 +59,12 @@ export async function sendEmail(type: string, to: string, data: any) {
 /**
  * Queue order confirmation email
  */
-export async function queueOrderConfirmation(order: any) {
+export async function queueOrderConfirmation(order: { id: string; total: number; user: { email: string; name: string }; items: Array<{ product: { name: string }; quantity: number; price: number }> }) {
     await sendEmail('orderConfirmation', order.user.email, {
         orderNumber: order.id.slice(0, 8).toUpperCase(),
         customerName: order.user.name,
         total: order.total,
-        items: order.items.map((item: any) => ({
+        items: order.items.map((item) => ({
             name: item.product.name,
             quantity: item.quantity,
             price: item.price * item.quantity
@@ -75,7 +75,7 @@ export async function queueOrderConfirmation(order: any) {
 /**
  * Queue shipping update email
  */
-export async function queueShippingUpdate(order: any, trackingCode: string) {
+export async function queueShippingUpdate(order: { id: string; user: { email: string; name: string }; shippingDays: number }, trackingCode: string) {
     await sendEmail('shippingUpdate', order.user.email, {
         orderNumber: order.id.slice(0, 8).toUpperCase(),
         customerName: order.user.name,
@@ -109,7 +109,7 @@ export async function queueWelcomeEmail(email: string, userName: string, welcome
 /**
  * Queue low stock alert (admin)
  */
-export async function queueLowStockAlert(product: any, adminEmail: string) {
+export async function queueLowStockAlert(product: { name: string; stock: number }, adminEmail: string) {
     await sendEmail('lowStockAlert', adminEmail, {
         productName: product.name,
         currentStock: product.stock
@@ -119,7 +119,7 @@ export async function queueLowStockAlert(product: any, adminEmail: string) {
 /**
  * Send message to custom queue
  */
-export async function sendToQueue(queueName: string, message: any) {
+export async function sendToQueue(queueName: string, message: Record<string, unknown>) {
     try {
         const ch = await getMessageQueue();
         if (!ch) throw new Error('Failed to connect to message queue');

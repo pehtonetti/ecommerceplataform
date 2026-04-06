@@ -18,10 +18,6 @@ export function PaymentSettingsForm() {
         whatsappMessage: ""
     });
 
-    useEffect(() => {
-        loadConfig();
-    }, []);
-
     const loadConfig = async () => {
         setLoading(true);
         const result = await getStoreConfig();
@@ -39,6 +35,10 @@ export function PaymentSettingsForm() {
 
         setLoading(false);
     };
+
+    useEffect(() => {
+        loadConfig();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

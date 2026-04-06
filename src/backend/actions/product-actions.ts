@@ -9,12 +9,11 @@ import { getStoreId } from "@/backend/lib/store-context";
 
 export async function createProduct(formData: FormData) {
     try {
-        // Verify Permissions (Admin or Editor)
         await checkPermission(PERMISSIONS.MANAGE_PRODUCTS);
 
         const storeId = await getStoreId();
         const name = formData.get('name') as string;
-        const price = Number(formData.get('price')); // Expecting cents or handling conversion
+        const price = Number(formData.get('price'));
         const description = formData.get('description') as string;
         const stock = Number(formData.get('stock'));
         const imageUrl = formData.get('imageUrl') as string;
@@ -24,7 +23,7 @@ export async function createProduct(formData: FormData) {
             data: {
                 storeId,
                 name,
-                price: Math.round(price * 100), // Convert to cents if input is decimal
+                price: Math.round(price * 100),
                 description,
                 stock,
                 imageUrl,
@@ -32,14 +31,15 @@ export async function createProduct(formData: FormData) {
                 active: true,
             }
         });
-    } catch (e) {
+        
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
         console.error('Create Product Error', e);
-        return;
+        return { success: false, error: 'Erro ao criar produto' };
     }
-
-    revalidatePath('/admin/products');
-    revalidatePath('/');
-    redirect('/admin/products');
 }
 
 export async function updateProduct(id: string, formData: FormData) {
@@ -65,32 +65,47 @@ export async function updateProduct(id: string, formData: FormData) {
                 category
             }
         });
-    } catch (e) {
-        console.error('Update Product Error', e);
-        return;
-    }
 
-    revalidatePath('/admin/products');
-    revalidatePath('/');
-    redirect('/admin/products');
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+        console.error('Update Product Error', e);
+        return { success: false, error: 'Erro ao atualizar produto' };
+    }
 }
 
 export async function deleteProduct(id: string) {
-    await checkPermission(PERMISSIONS.MANAGE_PRODUCTS);
-    const storeId = await getStoreId();
+    try {
+        await checkPermission(PERMISSIONS.MANAGE_PRODUCTS);
+        const storeId = await getStoreId();
 
-    await prisma.product.deleteMany({
-        where: { id, storeId }
-    });
+        await prisma.product.deleteMany({
+            where: { id, storeId }
+        });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/');
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+        console.error('Delete Product Error', e);
+        return { success: false, error: 'Erro ao deletar produto' };
+    }
 }
 
 export async function getMerchantProducts() {
-    const storeId = await getStoreId();
-    return await prisma.product.findMany({
-        where: { storeId },
-        orderBy: { createdAt: 'desc' }
-    });
+    try {
+        const storeId = await getStoreId();
+        const products = await prisma.product.findMany({
+            where: { storeId },
+            orderBy: { createdAt: 'desc' }
+        });
+        return { success: true, products };
+    } catch (e: any) {
+        if (e?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+        console.error('Get Merchant Products Error', e);
+        return { success: false, error: 'Erro ao buscar produtos' };
+    }
 }

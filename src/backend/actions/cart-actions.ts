@@ -108,7 +108,7 @@ export async function addToCart(productId: string, quantity: number = 1, options
         return { success: true };
     } catch (error) {
         console.error('Erro ao adicionar ao carrinho:', error);
-        return { error: 'Erro ao adicionar produto' };
+        return { success: false, error: 'Erro ao adicionar produto' };
     }
 }
 
@@ -125,7 +125,7 @@ export async function removeFromCart(cartItemId: string) {
         return { success: true };
     } catch (error) {
         console.error('Erro ao remover do carrinho:', error);
-        return { error: 'Erro ao remover produto' };
+        return { success: false, error: 'Erro ao remover produto' };
     }
 }
 
@@ -147,7 +147,7 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
         return { success: true };
     } catch (error) {
         console.error('Erro ao atualizar quantidade:', error);
-        return { error: 'Erro ao atualizar quantidade' };
+        return { success: false, error: 'Erro ao atualizar quantidade' };
     }
 }
 
@@ -208,6 +208,6 @@ export async function getCart(userId?: string) {
         return { success: true, cart: serializedCart };
     } catch (error) {
         console.error('Erro ao buscar carrinho:', error);
-        return { error: 'Erro ao buscar carrinho' };
+        return { success: false, error: 'Erro ao buscar carrinho' };
     }
 }

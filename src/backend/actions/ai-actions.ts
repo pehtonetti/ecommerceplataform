@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-export async function logBehavior(action: string, details?: any) {
+export async function logBehavior(action: string, details?: Record<string, unknown>) {
     try {
         const user = await getCurrentUser();
 
@@ -12,7 +12,7 @@ export async function logBehavior(action: string, details?: any) {
             data: {
                 userId: user?.id || null,
                 action,
-                details: details || {},
+                details: details ? JSON.stringify(details) : "{}",
             }
         });
 
@@ -20,7 +20,7 @@ export async function logBehavior(action: string, details?: any) {
     } catch (e) {
         // Silently fail logging to avoid breaking UX
         console.error("Failed to log behavior:", e);
-        return { error: "Failed to log" };
+        return { success: false, error: "Failed to log" };
     }
 }
 
@@ -46,8 +46,13 @@ export async function getAiRecommendations() {
         // Simple frequency count
         const productCounts: Record<string, number> = {};
         logs.forEach(log => {
-            const pid = (log.details as any)?.productId;
-            if (pid) productCounts[pid] = (productCounts[pid] || 0) + 1;
+            try {
+                const details = log.details ? JSON.parse(log.details as string) as { productId?: string } : null;
+                const pid = details?.productId;
+                if (pid) productCounts[pid] = (productCounts[pid] || 0) + 1;
+            } catch {
+                // Ignore malformed logs
+            }
         });
 
         // Filter products viewed > 3 times
@@ -107,9 +112,10 @@ export async function generateProductAIContent(productName: string) {
             return { success: false, error: "Falha ao processar resposta da IA." };
         }
 
-    } catch (error: any) {
-        console.error("AI Generation Error:", error);
-        return { success: false, error: error.message || "Erro desconhecido na geração por IA." };
+    } catch (error: unknown) {
+        const aiError = error as Error;
+        console.error("AI Generation Error:", aiError);
+        return { success: false, error: aiError.message || "Erro desconhecido na geração por IA." };
     }
 }
 

@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default async function MerchantCategoriesPage() {
-    const categories = await getCategories();
+    const result = await getCategories();
+    const categories = result.success && result.categories ? result.categories : [];
 
     return (
         <div className="space-y-6 animate-in fade-in duration-700">

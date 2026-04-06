@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getUserAddresses() {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login necessário", addresses: [] };
+    if (!user) return { success: false, error: "Login necessário", addresses: [] };
 
     try {
         const addresses = await prisma.address.findMany({
@@ -16,13 +16,13 @@ export async function getUserAddresses() {
         return { success: true, addresses };
     } catch (error) {
         console.error("Fetch Addresses Error:", error);
-        return { error: "Erro ao buscar endereços", addresses: [] };
+        return { success: false, error: "Erro ao buscar endereços", addresses: [] };
     }
 }
 
 export async function addAddress(formData: FormData) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login necessário" };
+    if (!user) return { success: false, error: "Login necessário" };
 
     const zipCode = formData.get("zipCode") as string;
     const street = formData.get("street") as string;
@@ -36,7 +36,7 @@ export async function addAddress(formData: FormData) {
 
     // Validation
     if (!zipCode || !street || !number || !city || !state) {
-        return { error: "Preencha os campos obrigatórios" };
+        return { success: false, error: "Preencha os campos obrigatórios" };
     }
 
     try {
@@ -58,13 +58,13 @@ export async function addAddress(formData: FormData) {
         return { success: true };
     } catch (error) {
         console.error("Add Address Error:", error);
-        return { error: "Erro ao salvar endereço" };
+        return { success: false, error: "Erro ao salvar endereço" };
     }
 }
 
 export async function deleteAddress(addressId: string) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login necessário" };
+    if (!user) return { success: false, error: "Login necessário" };
 
     try {
         await prisma.address.delete({
@@ -78,13 +78,13 @@ export async function deleteAddress(addressId: string) {
         revalidatePath('/checkout');
         return { success: true };
     } catch (error) {
-        return { error: "Erro ao remover endereço" };
+        return { success: false, error: "Erro ao remover endereço" };
     }
 }
 
 export async function setDefaultAddress(addressId: string) {
     const user = await getCurrentUser();
-    if (!user) return { error: "Login necessário" };
+    if (!user) return { success: false, error: "Login necessário" };
 
     try {
         // Unset current default
@@ -103,6 +103,6 @@ export async function setDefaultAddress(addressId: string) {
         revalidatePath('/checkout');
         return { success: true };
     } catch (error) {
-        return { error: "Erro ao atualizar endereço padrão" };
+        return { success: false, error: "Erro ao atualizar endereço padrão" };
     }
 }
