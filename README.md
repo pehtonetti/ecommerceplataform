@@ -1,213 +1,118 @@
-# Plataforma E‑Commerce - Tudo que você precisa saber pra rodar o projeto. 
+# Simplify Platform - E-commerce CMS Multi-tenant
 
-🚀 **Projeto completo de plataforma de e‑commerce**, com arquitetura moderna, modular, escalável e preparada para produção, contendo API, painel administrativo e storefront.
-
----
-
-## 📌 Visão Geral do Projeto
-
-Este repositório reúne uma solução robusta de e‑commerce desenvolvida em **Next.js**, **Node.js**, **Prisma**, **Docker**, **PostgreSQL** e arquitetura documentada para implantação em ambientes modernos como **Docker Compose** e **Kubernetes (k8s)**.
-
-A estrutura foi pensada para permitir **extensões corporativas**, **segurança**, **desempenho** e **evolução contínua**.
+A Simplify é uma plataforma de e-commerce White-Label de alto desempenho, projetada para permitir que lojistas criem suas vitrines digitais em segundos. Com uma arquitetura multi-tenant moderna, o sistema isola dados por subdomínios, oferecendo um CMS robusto e segurança de nível bancário.
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## Visão Geral
 
-A plataforma segue uma abordagem monorepo contendo:
-
-### **1. Frontend (Next.js)**
-
-- Renderização híbrida (SSR/SSG)
-- Rotas otimizadas para SEO
-- Design responsivo
-- Autenticação integrada
-
-### **2. Backend / API**
-
-- Prisma ORM
-- Validações e middlewares
-- Serviços organizados por domínio
-- Endpoints para produtos, carrinho, pedidos, usuários, pagamentos etc.
-
-### **3. Banco de Dados**
-
-- PostgreSQL
-- Migrações Prisma
-- Índices para performance
-
-### **4. Infraestrutura**
-
-- Dockerfile otimizado
-- docker-compose para ambiente completo
-- Manifests Kubernetes
-- Suporte a múltiplos ambientes (dev/qa/prod)
+A Simplify atua como uma infraestrutura completa para criação de lojas:
+- Landing Page: Fluxo de onboarding em 2 passos para novos lojistas.
+- CMS para Lojistas: Painel completo para gerenciar produtos, pedidos, banners, blog, cupons e avaliações.
+- Storefront Dinâmico: Vitrines ultra-rápidas otimizadas para conversão e SEO.
+- Segurança Nativa: Proteção contra ataques comuns, sistema de sessões baseado em tokens no banco e auditoria de ações.
 
 ---
 
-## ⚙️ Tecnologias Principais
+## Stack Tecnológica
 
-- **Next.js 14+**
-- **TypeScript**
-- **Node.js**
-- **Prisma ORM**
-- **PostgreSQL**
-- **Docker / Docker Compose**
-- **Kubernetes (k8s)**
-- **ESLint + Padronização de código**
-- **CI/CD (GitHub Actions)**
+- Framework: Next.js 15 (App Router)
+- Linguagem: TypeScript
+- ORM: Prisma
+- Banco de Dados: MySQL
+- Estilização: Tailwind CSS 4
+- Componentes: Lucide Icons, Radix UI, Sonner (Toasts)
+- Segurança: CSP Headers, Rate Limiting, Criptografia Bcrypt (12 rounds)
+- Infraestrutura: Docker & Docker Compose
 
 ---
 
-## 📁 Estrutura do Repositório
+## Arquitetura Multi-tenant
+
+O sistema utiliza Hostname Routing para distinguir entre a plataforma principal e as lojas individuais:
+
+1. Platform Root (simplify.com.br ou localhost:3000):
+   - Exibe a Landing Page de vendas e o formulário de criação de novas lojas.
+   - Acesso ao /dashboard do lojista (após login).
+   - Acesso ao /admin global (estatísticas da plataforma).
+
+2. Store Subdomains (nomedaloja.simplify.com.br):
+   - Renderiza a vitrine específica do lojista baseado no slug extraído do host.
+   - Temas, cores, produtos e banners totalmente isolados.
+
+---
+
+## Segurança e Performance
+
+O sistema passou por auditoria recente para garantir a integridade dos dados:
+- Session Tokens: Utilização de tokens aleatórios de 256-bit armazenados no banco de dados para gerenciar sessões.
+- Rate Limiting: Proteção contra força bruta em rotas de autenticação e endpoints de API.
+- Security Headers: Configuração de Content Security Policy (CSP), HSTS e X-Frame-Options.
+- PWA: Suporte a Progressive Web App para experiência mobile aprimorada.
+
+---
+
+## Estrutura do Projeto
 
 ```plaintext
-ecommerceplataform/
-├── src/                # Código principal (frontend + backend)
-├── services/           # Módulos de domínio / serviços externos
-├── prisma/             # Schema e migrações
-├── public/             # Assets estáticos
-├── docker/             # Configurações adicionais Docker
-├── k8s/                # Manifests Kubernetes
-├── docs/ (implícito)   # Diversos arquivos de documentação
-├── docker-compose.yml  # Setup local
-├── Dockerfile          # Build da aplicação
-├── README.md           # Este arquivo
-└── ...
+src/
+├── app/
+│   ├── (admin)/        # Painel global da plataforma
+│   ├── (dashboard)/    # CMS do Lojista parceiro
+│   ├── (storefront)/   # Vitrine de vendas (Client-side)
+│   ├── api/            # Endpoints e Webhooks (Stripe, eNotas)
+│   └── home/           # Landing page da plataforma (Simplify)
+├── backend/
+│   ├── actions/        # Server Actions (Lógica de Negócio)
+│   └── lib/            # Helpers de servidor (Auth, Crypto, Prisma)
+├── frontend/
+│   ├── components/     # Componentes UI reutilizáveis
+│   └── styles/         # Tokens e utilitários de design
+└── lib/                # Utilidades compartilhadas
 ```
 
 ---
 
-## 🚀 Como Rodar o Projeto Localmente
+## Instalação e Execução
 
-### **1. Instale dependências**
-
+### 1. Dependências
 ```bash
 npm install
 ```
 
-### **2. Configure variáveis de ambiente**
-
-Crie seu arquivo:
-
+### 2. Variáveis de Ambiente
+Copie o template e configure seu banco de dados e chaves de API:
 ```bash
 cp env.template .env
 ```
 
-Preencha com suas credenciais (veja `ENV_EXAMPLE.md`).
-
-### **3. Execute migrações**
-
+### 3. Banco de Dados
+Execute as migrações para preparar o banco:
 ```bash
 npx prisma migrate dev
 ```
 
-### **4. Execute o sistema**
-
+### 4. Desenvolvimento
 ```bash
 npm run dev
 ```
 
 ---
 
-## 🐳 Executar com Docker
+## Comandos Disponíveis
 
-```bash
-docker compose up --build
-```
-
-A aplicação subirá com banco de dados, API e frontend automaticamente.
-
----
-
-## ☸️ Deploy em Kubernetes
-
-O diretório `k8s/` contém:
-
-- Deployments
-- Services
-- Ingress
-- Secrets
-- ConfigMaps
-
-Para deploy:
-
-```bash
-kubectl apply -f k8s/
-```
+- npm run db:seed: Popula o banco com dados iniciais.
+- npm run db:seed-store: Cria uma loja de teste completa.
+- npm run test: Executa a suíte de testes com Vitest.
+- npm run lint: Verifica padrões de codificação.
 
 ---
 
-## 📚 Documentação Completa
+## Autor
 
-Dentro do repositório existem arquivos detalhados, incluindo:
-
-- **QUICKSTART.md** → como iniciar rapidamente
-- **INFRASTRUCTURE.md** → arquitetura completa
-- **INFRASTRUCTURE\_QUICKSTART.md** → guia rápido de infraestrutura
-- **MIGRATION\_GUIDE.md** → migração entre versões
-- **ENTERPRISE\_FEATURES.md** → recursos corporativos
-- **ROADMAP\_STATUS.md** → status do desenvolvimento
-- **CHECKLIST\_COMPLETO.md** → checklist de implantação
-- **STATUS\_FINAL.md** → visão final do projeto
-- **ATUALIZACOES\_FINAIS.md** → mudanças e melhorias
+Pedro Tonetti — Especialista Fullstack
+Email: pedrotonetti@gmail.com
+LinkedIn: linkedin.com/in/pehtonetti
 
 ---
-
-## 🧪 Testes
-
-A plataforma possui endpoints e scripts de diagnóstico (`diagnostic.js` e `test-server.js`).
-Execute:
-
-```bash
-node diagnostic.js
-```
-
----
-
-## 🔒 Segurança
-
-- Variáveis sensíveis isoladas
-- Docker Hardened
-- Regra de CORS configurada
-- Prisma com validações
-- Sanitização de entradas
-
----
-
-## 📈 Roadmap
-
-- Integração com gateways de pagamento
-- Webhooks e notificações
-- Dashboard administrativo completo
-- Suporte multilíngue
-- Testes automatizados (E2E + unitários)
-
----
-
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Antes de abrir PR, veja:
-
-- Padrões de commit
-- ESLint
-- Fluxo de branches
-- Checklist de PR
-
----
-
-## 🧑💻 Autor
-
-**Pedro Tonetti**
-Especialista em TI e desenvolvedor FULLSTACK.
-
-📧 [pedrotonetti@gmail.com](mailto\:pedrotonetti@gmail.com)\
-📱 +55 14 996861719\
-🔗 LinkedIn: *Pedro.tonetti*
-
----
-
-## ⭐ Se este projeto te ajudou
-Considere deixar uma estrela ⭐ no repositório!
-
----
+Simplify: O próximo nível do e-commerce brasileiro.
