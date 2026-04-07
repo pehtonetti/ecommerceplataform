@@ -19,6 +19,7 @@ interface ProductSectionProps {
     products: Product[];
     viewAllLink?: string;
     icon?: React.ReactNode;
+    layoutConfig?: any;
 }
 
 export default function ProductSection({
@@ -27,6 +28,7 @@ export default function ProductSection({
     products,
     viewAllLink,
     icon,
+    layoutConfig,
 }: ProductSectionProps) {
     const [displayProducts, setDisplayProducts] = useState<Product[]>(products);
 
@@ -61,12 +63,11 @@ export default function ProductSection({
                 )}
             </div>
 
-            {/* Products Grid */}
             {/* Products Stream (Horizontal Scroll) */}
             <div className="flex overflow-x-auto pb-6 gap-4 snap-x scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-zinc-700 px-1">
                 {displayProducts.map((product) => (
                     <div key={product.id} className="w-[200px] md:w-[240px] flex-none snap-start">
-                        <ProductCard product={product} />
+                        <ProductCard product={product} layoutConfig={layoutConfig} />
                     </div>
                 ))}
             </div>

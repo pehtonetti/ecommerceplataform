@@ -20,7 +20,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
+    "@ducanh2912/next-pwa": "10.2.6",
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -35,9 +35,9 @@
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.25",
     "lucide-react": "^0.556.0",
-    "next": "16.0.8",
+    "next": "16.2.2",
     "next-themes": "^0.4.6",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "8.0.5",
     "qrcode": "^1.5.4",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -48,7 +48,19 @@
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
     "winston": "^3.19.0",
-    "xlsx": "^0.18.5"
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "@types/file-saver": "^2.0.7"
+  },
+  "overrides": {
+    "axios": "^1.7.7",
+    "lodash": "^4.17.21",
+    "fast-xml-parser": "^4.4.1",
+    "rollup": "^4.22.4",
+    "flatted": "^3.3.1",
+    "vite": "^6.4.2",
+    "serialize-javascript": "^7.0.5",
+    "esbuild": "^0.25.0"
   },
   "devDependencies": {
     "@prisma/client": "5.22.0",
@@ -62,7 +74,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^9",
-    "eslint-config-next": "16.0.8",
+    "eslint-config-next": "16.2.2",
     "jsdom": "^29.0.1",
     "prisma": "5.22.0",
     "tailwindcss": "^4",

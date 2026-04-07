@@ -106,6 +106,7 @@ export async function updateStoreAppearance(data: {
     primaryColor?: string;
     theme?: string;
     logoUrl?: string;
+    homeLayout?: string; // Novo: JSON com blocos de conteúdo e fontes
 }) {
     try {
         const storeId = await getStoreId();
@@ -116,11 +117,13 @@ export async function updateStoreAppearance(data: {
                 primaryColor: data.primaryColor,
                 theme: data.theme,
                 logoUrl: data.logoUrl,
+                homeLayout: data.homeLayout,
             }
         });
 
-        revalidatePath('/dashboard/settings/appearance');
+        revalidatePath('/dashboard/appearance');
         revalidatePath('/'); // Revalida a storefront
+        revalidatePath('/(storefront)', 'layout');
 
         return { success: true, config };
     } catch (error) {

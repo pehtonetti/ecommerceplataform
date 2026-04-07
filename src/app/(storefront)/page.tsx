@@ -2,183 +2,274 @@ import { prisma } from '@/lib/prisma';
 import PromoBannerCarousel from '@/frontend/components/PromoBannerCarousel';
 import ProductSection from '@/frontend/components/ProductSection';
 import FeaturedCategories from '@/frontend/components/FeaturedCategories';
-import { Heart, Clock, Search, Tag, TrendingUp } from 'lucide-react';
-import { headers } from 'next/headers';
+import { Heart, Clock, Search, Tag, TrendingUp, Newspaper, ChevronRight } from 'lucide-react';
+import { getStoreContext } from '@/backend/lib/store-context';
+import Link from 'next/link';
+import Image from 'next/image';
+
+// Tipos para o Layout Dinâmico
+type ThemeConfig = {
+  fontFamily: string;
+  borderRadius: string;
+  productCardStyle: string;
+  showAddToCartOnCard: boolean;
+};
+
+type LayoutSection = {
+  id: string;
+  active: boolean;
+  title: string;
+};
+
+type HomeLayoutConfig = {
+  theme: ThemeConfig;
+  sections: LayoutSection[];
+};
+
+const defaultLayout: HomeLayoutConfig = {
+  theme: {
+    fontFamily: 'Inter',
+    borderRadius: 'rounded-xl',
+    productCardStyle: 'shadowed',
+    showAddToCartOnCard: true,
+  },
+  sections: [
+    { id: 'hero', active: true, title: 'Destaques' },
+    { id: 'trending', active: true, title: 'Mais Vendidos' },
+    { id: 'new-arrivals', active: true, title: 'Novidades' },
+    { id: 'promo', active: true, title: 'Ofertas Imperdíveis' },
+    { id: 'blog', active: true, title: 'Nosso Blog' },
+    { id: 'benefits', active: true, title: 'Benefícios' },
+  ]
+};
 
 // Vitrine: funções de dados
-async function getRecentlyViewedProducts() {
-  try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const viewCounts = await prisma.productView.groupBy({
+async function getStoreBanners(storeId: string) {
+  return await prisma.banner.findMany({
+    where: { storeId, active: true },
+    orderBy: { order: 'asc' },
+  });
+}
+
+async function getStorePosts(storeId: string) {
+  return await prisma.post.findMany({
+    where: { storeId, published: true },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+  });
+}
+
+async function getProductsByFilter(storeId: string, filter: 'trending' | 'new' | 'promo' | 'recent') {
+  if (filter === 'trending') {
+    const topSelling = await prisma.orderItem.groupBy({
       by: ['productId'],
-      where: { createdAt: { gte: sevenDaysAgo } },
-      _count: { productId: true },
-      orderBy: { _count: { productId: 'desc' } },
+      where: { order: { storeId } },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
       take: 10,
     });
-    const productIds = viewCounts.map((v) => v.productId);
+    const productIds = topSelling.map((item) => item.productId);
     return await prisma.product.findMany({
-      where: { id: { in: productIds }, active: true },
+      where: { id: { in: productIds }, active: true, storeId },
       select: { id: true, name: true, price: true, imageUrl: true, category: true },
     });
-  } catch {
+  }
+
+  if (filter === 'new') {
     return await prisma.product.findMany({
-      where: { active: true },
+      where: { active: true, storeId },
       orderBy: { createdAt: 'desc' },
       take: 10,
       select: { id: true, name: true, price: true, imageUrl: true, category: true },
     });
   }
-}
 
-async function getPromoProducts() {
-  return await prisma.product.findMany({
-    where: { active: true, price: { lt: 10000 } },
-    orderBy: { price: 'asc' },
-    take: 10,
-    select: { id: true, name: true, price: true, imageUrl: true, category: true },
-  });
-}
-
-async function getTrendingProducts() {
-  const topSelling = await prisma.orderItem.groupBy({
-    by: ['productId'],
-    _sum: { quantity: true },
-    orderBy: { _sum: { quantity: 'desc' } },
-    take: 10,
-  });
-  const productIds = topSelling.map((item) => item.productId);
-  return await prisma.product.findMany({
-    where: { id: { in: productIds }, active: true },
-    select: { id: true, name: true, price: true, imageUrl: true, category: true },
-  });
-}
-
-async function getNewProducts() {
-  return await prisma.product.findMany({
-    where: { active: true },
-    orderBy: { createdAt: 'desc' },
-    take: 10,
-    select: { id: true, name: true, price: true, imageUrl: true, category: true },
-  });
-}
-
-async function getAppleProducts() {
-  return await prisma.product.findMany({
-    where: { category: 'Apple', active: true },
-    take: 8,
-    orderBy: { price: 'desc' },
-    select: { id: true, name: true, price: true, imageUrl: true, category: true },
-  });
-}
-
-// Vitrine completa (subdomínios de loja)
-export default async function StorefrontHome() {
-  const headersList = await headers();
-  const host = headersList.get('host') ?? '';
-  const platformDomain = process.env.PLATFORM_DOMAIN ?? 'simplify.com.br';
-  const isStoreDomain = host.endsWith(`.${platformDomain}`);
-
-  // Não é subdomínio de loja — rota / servida pelo app/page.tsx
-  // Este arquivo é apenas para o caso de subdomínios chegarem aqui
-  if (!isStoreDomain) {
-    // Fallback: mostra vitrine de qualquer forma no dev
-    // (o app/page.tsx cuida da landing no domínio raiz)
+  if (filter === 'promo') {
+    return await prisma.product.findMany({
+      where: { active: true, storeId, price: { lt: 500 } },
+      orderBy: { price: 'asc' },
+      take: 10,
+      select: { id: true, name: true, price: true, imageUrl: true, category: true },
+    });
   }
 
-  const [recentlyViewed, promoProducts, trendingProducts, newProducts, appleProducts] = await Promise.all([
-    getRecentlyViewedProducts(),
-    getPromoProducts(),
-    getTrendingProducts(),
-    getNewProducts(),
-    getAppleProducts(),
+  // Fallback / Recent
+  return await prisma.product.findMany({
+    where: { active: true, storeId },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
+    select: { id: true, name: true, price: true, imageUrl: true, category: true },
+  });
+}
+
+export default async function StorefrontHome() {
+  const store = await getStoreContext();
+  
+  // Parse do Layout CMS
+  let layout = defaultLayout;
+  if (store.homeLayout) {
+    try {
+      layout = JSON.parse(store.homeLayout);
+    } catch (e) {
+      console.error("Error parsing home layout", e);
+    }
+  }
+
+  const sections = layout.sections.filter(s => s.active);
+
+  // Busca dados em paralelo apenas se a seção estiver ativa
+  const [banners, posts, trending, newest, promos, recent] = await Promise.all([
+    sections.find(s => s.id === 'hero') ? getStoreBanners(store.id) : [],
+    sections.find(s => s.id === 'blog') ? getStorePosts(store.id) : [],
+    sections.find(s => s.id === 'trending') ? getProductsByFilter(store.id, 'trending') : [],
+    sections.find(s => s.id === 'new-arrivals') ? getProductsByFilter(store.id, 'new') : [],
+    sections.find(s => s.id === 'promo') ? getProductsByFilter(store.id, 'promo') : [],
+    sections.find(s => s.id === 'recent') ? getProductsByFilter(store.id, 'recent') : [],
   ]);
 
+  // CSS Styles baseados no CMS
+  const themeStyles = {
+    fontFamily: layout.theme.fontFamily || 'Inter',
+    primaryColor: store.primaryColor || '#6366f1',
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black" suppressHydrationWarning>
+    <div 
+        className="min-h-screen bg-gray-50 dark:bg-black" 
+        style={{ fontFamily: themeStyles.fontFamily }}
+        suppressHydrationWarning
+    >
       <div className="w-full" suppressHydrationWarning>
-        <div className="mb-0">
-          <PromoBannerCarousel />
-        </div>
-        <div className="px-4 py-6 space-y-12">
+        
+        {/* HERO SECTION */}
+        {layout.sections.find(s => s.id === 'hero' && s.active) && (
+            <div className="mb-0">
+                <PromoBannerCarousel banners={banners.map(b => ({ ...b, subtitle: b.subtitle ?? undefined })) as any} />
+            </div>
+        )}
+        
+        <div className="px-4 py-12 space-y-20 max-w-7xl mx-auto">
+          
+          {/* Featured Categories (Sempre visível mas poderia ser opcional) */}
           <FeaturedCategories />
-          {trendingProducts.length > 0 && (
-            <ProductSection
-              title="Mais Vendidos"
-              subtitle="Os produtos que todo mundo está comprando"
-              products={trendingProducts}
-              viewAllLink="/search?sort=bestselling"
-              icon={<TrendingUp className="w-6 h-6" />}
-            />
-          )}
-          {appleProducts.length > 0 && (
-            <ProductSection
-              title="Ecossistema Apple"
-              subtitle="A melhor experiência em tecnologia premium"
-              products={appleProducts}
-              viewAllLink="/search?category=apple"
-              icon={<Heart className="w-6 h-6 text-black dark:text-white" />}
-            />
-          )}
-          {promoProducts.length > 0 && (
-            <ProductSection
-              title="Promoções abaixo de R$ 100"
-              subtitle="Ofertas imperdíveis com preços especiais"
-              products={promoProducts}
-              viewAllLink="/search?maxPrice=100"
-              icon={<Tag className="w-6 h-6" />}
-            />
-          )}
-          {recentlyViewed.length > 0 && (
-            <ProductSection
-              title="Vistos Recentemente"
-              subtitle="Continue de onde parou"
-              products={recentlyViewed}
-              viewAllLink="/search"
-              icon={<Clock className="w-6 h-6" />}
-            />
-          )}
-          {newProducts.length > 0 && (
-            <ProductSection
-              title="Novidades"
-              subtitle="Produtos recém-chegados"
-              products={newProducts}
-              viewAllLink="/search?sort=newest"
-              icon={<Search className="w-6 h-6" />}
-            />
-          )}
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Categorias em Destaque</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Smartphones', 'Games', 'Informática', 'Acessórios'].map((category) => (
-                <a
-                  key={category}
-                  href={`/search?category=${category.toLowerCase()}`}
-                  className="bg-white p-6 rounded-lg hover:shadow-lg transition-shadow text-center"
-                >
-                  <h3 className="font-semibold text-lg text-gray-800">{category}</h3>
-                  <p className="text-sm text-gray-600 mt-1">Ver produtos</p>
-                </a>
-              ))}
-            </div>
-          </section>
-          <section className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Frete Grátis</h3>
-                <p className="text-sm opacity-90">Em compras acima de R$ 99</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Pagamento Seguro</h3>
-                <p className="text-sm opacity-90">Seus dados protegidos</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Troca Grátis</h3>
-                <p className="text-sm opacity-90">Até 30 dias após a compra</p>
-              </div>
-            </div>
-          </section>
+
+          {/* Renderização Dinâmica das Seções de Produto */}
+          {layout.sections.map((section) => {
+              if (!section.active) return null;
+
+              if (section.id === 'trending' && trending.length > 0) {
+                  return (
+                    <ProductSection
+                        key={section.id}
+                        title={section.title}
+                        subtitle="Os produtos mais amados"
+                        products={trending}
+                        viewAllLink="/search?sort=bestselling"
+                        icon={<TrendingUp className="w-6 h-6" style={{ color: themeStyles.primaryColor }} />}
+                        layoutConfig={layout}
+                    />
+                  );
+              }
+
+              if (section.id === 'new-arrivals' && newest.length > 0) {
+                return (
+                  <ProductSection
+                      key={section.id}
+                      title={section.title}
+                      subtitle="Novidades fresquinhas"
+                      products={newest}
+                      viewAllLink="/search?sort=newest"
+                      icon={<Heart className="w-6 h-6" style={{ color: themeStyles.primaryColor }} />}
+                      layoutConfig={layout}
+                  />
+                );
+              }
+
+              if (section.id === 'promo' && promos.length > 0) {
+                return (
+                  <ProductSection
+                      key={section.id}
+                      title={section.title}
+                      subtitle="Aproveite enquanto durar"
+                      products={promos}
+                      viewAllLink="/search?discount=true"
+                      icon={<Tag className="w-6 h-6" style={{ color: themeStyles.primaryColor }} />}
+                      layoutConfig={layout}
+                  />
+                );
+              }
+
+              if (section.id === 'blog' && posts.length > 0) {
+                  return (
+                    <section key={section.id} className="space-y-8">
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <h2 className="text-3xl font-black flex items-center gap-2">
+                                    <Newspaper className="w-8 h-8" style={{ color: themeStyles.primaryColor }} />
+                                    {section.title}
+                                </h2>
+                                <p className="text-zinc-500 mt-1">Dicas e novidades direto para você</p>
+                            </div>
+                            <Link href="/blog" className="text-sm font-bold flex items-center gap-1 group" style={{ color: themeStyles.primaryColor }}>
+                                Ver todos <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {posts.map((post) => (
+                                <Link 
+                                    key={post.id} 
+                                    href={`/blog/${post.slug}`}
+                                    className={`group bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-xl transition-all border border-zinc-100 dark:border-zinc-800 ${layout.theme.borderRadius}`}
+                                >
+                                    <div className="relative aspect-video">
+                                        {post.imageUrl ? (
+                                            <Image src={post.imageUrl} alt={post.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        ) : (
+                                            <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">📝</div>
+                                        )}
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-lg font-bold group-hover:text-indigo-600 transition-colors line-clamp-2">{post.title}</h3>
+                                        <p className="text-sm text-zinc-500 mt-3 line-clamp-2">{post.content.replace(/[#*_]/g, '')}</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+                  );
+              }
+
+              if (section.id === 'benefits') {
+                  return (
+                    <section key={section.id} className={`bg-zinc-900 p-10 text-white shadow-2xl relative overflow-hidden ${layout.theme.borderRadius}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center relative z-10">
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold">{section.title}</h3>
+                                <p className="text-zinc-400 text-sm">Garantimos a melhor experiência de compra personalizada para você.</p>
+                            </div>
+                            <div className="space-y-2 flex flex-col items-center">
+                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                                    <TrendingUp className="w-6 h-6 text-blue-400" />
+                                </div>
+                                <h4 className="font-bold">Frete Smart</h4>
+                                <p className="text-zinc-500 text-xs">Cálculo dinâmico baseado na sua localização</p>
+                            </div>
+                            <div className="space-y-2 flex flex-col items-center">
+                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                                    <Heart className="w-6 h-6 text-pink-400" />
+                                </div>
+                                <h4 className="font-bold">Suporte VIP</h4>
+                                <p className="text-zinc-500 text-xs">Atendimento prioritário via WhatsApp</p>
+                            </div>
+                        </div>
+                    </section>
+                  );
+              }
+
+              return null;
+          })}
+
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
 "use server";
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getStoreId } from "@/backend/lib/store-context";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -12,13 +13,33 @@ export async function processImportFile(formData: FormData) {
         if (!file) throw new Error("Arquivo não encontrado");
 
         const buffer = await file.arrayBuffer();
-        const workbook = XLSX.read(buffer, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rawData = XLSX.utils.sheet_to_json(sheet);
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        
+        const worksheet = workbook.getWorksheet(1);
+        if (!worksheet) throw new Error("Não foi possível ler a planilha");
 
-        // Process each row with AI concurrently (with limits ideally, but strictly simpler here)
-        // Only processing first 10 for demo speed if list is huge, or all if reasonable.
+        const rawData: any[] = [];
+        
+        // Assume first row is header
+        const headerRow = worksheet.getRow(1);
+        const headers: string[] = [];
+        headerRow.eachCell((cell) => {
+            headers.push(cell.text);
+        });
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) return; // Skip header
+
+            const rowData: any = {};
+            row.eachCell((cell, colNumber) => {
+                const header = headers[colNumber - 1];
+                if (header) rowData[header] = cell.value;
+            });
+            rawData.push(rowData);
+        });
+
+        // Process data with AI
         const processedData = await Promise.all(rawData.map(async (row: any) => {
             const hasDesc = row.Description && row.Description.length > 10;
             const hasCategory = row.Category && row.Category.length > 3;
@@ -26,37 +47,35 @@ export async function processImportFile(formData: FormData) {
             let finalDesc = row.Description || "";
             let finalCategory = row.Category || "Geral";
 
-            // Determine what AI needs to generate
             if (!hasDesc || !hasCategory) {
                 try {
                     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
                     const prompt = `
-                        Analyze this product data: Name: "${row.Name}", Price: ${row.Price}.
-                        1. Create a compelling marketing description (max 200 chars) in Portuguese.
-                        2. Suggest a single category word (e.g., Eletrônicos, Roupas, Casa).
-                        Return JSON only: { "description": "...", "category": "..." }
+                        Analise estes dados: Nome: "${row.Name}", Preço: ${row.Price}.
+                        1. Crie uma descrição de marketing (max 200 chars) em PT-BR.
+                        2. Sugira uma categoria única.
+                        Retorne APENAS JSON: { "description": "...", "category": "..." }
                     `;
 
                     const result = await model.generateContent(prompt);
-                    const response = result.response;
-                    const text = response.text().replace(/```json|```/g, "").trim();
+                    const text = result.response.text().replace(/```json|```/g, "").trim();
 
                     try {
                         const json = JSON.parse(text);
                         if (!hasDesc) finalDesc = json.description;
                         if (!hasCategory) finalCategory = json.category;
                     } catch (e) {
-                        console.error("AI JSON Parse Error", e);
+                        console.error("AI Parse Error", e);
                     }
                 } catch (aiError) {
-                    console.error("AI Generation failed", aiError);
-                    finalDesc = finalDesc || `Produto incrível: ${row.Name}`;
+                    console.error("AI Generation Error", aiError);
+                    finalDesc = finalDesc || `Produto: ${row.Name}`;
                 }
             }
 
             return {
                 name: row.Name,
-                price: typeof row.Price === 'number' ? Math.round(row.Price * 100) : 0, // Assume input is float (19.90) -> 1990
+                price: typeof row.Price === 'number' ? Math.round(row.Price * 100) : 0,
                 stock: row.Stock || 10,
                 description: finalDesc,
                 category: finalCategory,
@@ -74,13 +93,12 @@ export async function processImportFile(formData: FormData) {
     }
 }
 
-
 export async function saveImportedProducts(products: any[]) {
     try {
-        // Batch creation
-        // Prisma createMany is faster
+        const storeId = await getStoreId();
         await prisma.product.createMany({
             data: products.map(p => ({
+                storeId,
                 name: p.name,
                 description: p.description,
                 price: p.price,
@@ -91,7 +109,6 @@ export async function saveImportedProducts(products: any[]) {
                 active: true
             }))
         });
-
         return { success: true };
     } catch (error: any) {
         console.error("Save Error:", error);
