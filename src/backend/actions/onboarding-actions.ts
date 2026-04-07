@@ -3,9 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { hashPassword } from "@/lib/crypto";
-import { redirect } from "next/navigation";
+import { createSession } from "@/backend/lib/auth";
 
-const COOKIE_NAME = 'ecommerce_session';
 
 function generateSlug(name: string): string {
     return name
@@ -96,19 +95,17 @@ export async function registerAndCreateStore(formData: FormData) {
             }
         });
 
-        // ─── Login automático ─────────────────────────────────────────────────
+        // ─── Login automático com sessão segura ───────────────────────────────
+        await createSession(user.id);
+
+        // Cookie de role para fast-path no middleware
         const cookieStore = await cookies();
-        cookieStore.set(COOKIE_NAME, user.id, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-        });
         cookieStore.set('user_role', 'merchant', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
+            maxAge: 30 * 24 * 60 * 60,
         });
 
         return { success: true, slug };

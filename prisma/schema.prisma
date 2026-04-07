@@ -450,6 +450,7 @@ model User {
   productViews ProductView[]
   supportTickets SupportTicket[]
   stores        Store[]
+  sessions      Session[]
 
   @@map("user")
 }
@@ -518,4 +519,39 @@ model Post {
   @@unique([storeId, slug])
   @@index([storeId])
   @@map("post")
+}
+
+// ─── SECURITY: Tabela de Sessões Seguras ──────────────────────────────────────
+// O cookie armazena apenas o token aleatório, nunca o userId diretamente.
+// Isso previne session forgery por enumeração de userId.
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique  // 256-bit hex token (crypto.randomBytes(32))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("session")
+}
+
+// ─── SECURITY: Log de Auditoria ───────────────────────────────────────────────
+// Registra ações críticas (login, logout, mudança de role, delete de dados).
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // ex: LOGIN_SUCCESS, LOGIN_FAIL, PRODUCT_DELETE, etc.
+  entity    String?  // ex: Product, Order, User
+  entityId  String?
+  details   String?  @db.Text
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("auditlog")
 }

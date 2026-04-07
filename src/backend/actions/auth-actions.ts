@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyPassword } from "@/lib/crypto";
-
-const COOKIE_NAME = 'ecommerce_session';
+import { createSession, destroySession } from "@/backend/lib/auth";
 
 export async function login(formData: FormData) {
     const email = formData.get('email') as string;
@@ -38,22 +37,17 @@ export async function login(formData: FormData) {
             return { success: false, error: 'Email ou senha inválidos.' };
         }
 
-        // Set Cookie as a Session Cookie (expires when browser/tab closes)
-        // Removed maxAge and expires to ensure "logout on exit" behavior
-        const cookieStore = await cookies();
-        cookieStore.set(COOKIE_NAME, user.id, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-        });
+        // Cria sessão segura com token aleatório no banco (não armazena userId no cookie)
+        await createSession(user.id);
 
-        // Adiciona um cookie de papel para validação rápida no middleware
+        // Cookie de role para fast-path no middleware (validação real é sempre pelo banco)
+        const cookieStore = await cookies();
         cookieStore.set('user_role', user.role, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
+            maxAge: 30 * 24 * 60 * 60,
         });
 
         // Return success with redirect URL instead of redirecting directly
@@ -77,8 +71,6 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-    const cookieStore = await cookies();
-    cookieStore.delete(COOKIE_NAME);
-    cookieStore.delete('user_role');
+    await destroySession();
     redirect('/');
 }

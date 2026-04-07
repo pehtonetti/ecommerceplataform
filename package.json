@@ -15,6 +15,7 @@
     "ci:local": "npm run lint && npm run test:coverage && npm run build && npm audit",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
+    "db:seed": "npx tsx prisma/seed_brasil.ts",
     "db:seed-store": "npx tsx prisma/seed-default-store.ts",
     "db:studio": "prisma studio"
   },
@@ -70,6 +71,6 @@
     "vitest": "^4.1.2"
   },
   "prisma": {
-    "seed": "ts-node -O {\"\"\"module\"\"\":\"\"\"CommonJS\"\"\"} prisma/seed_brasil.ts"
+    "seed": "npx tsx prisma/seed_brasil.ts"
   }
 }
